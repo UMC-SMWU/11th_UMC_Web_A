@@ -27,15 +27,9 @@ Web_A팀의 레포지토리 입니다.
 | `feat`     | 새로운 기능 추가                     |
 | `fix`      | 버그 수정                         |
 | `docs`     | 문서 수정                         |
-| `style`    | 코드 포맷팅, 세미콜론 누락 등 코드 스타일 변경   |
-| `design`   | 사용자 UI 디자인 변경 (CSS 등)         |
-| `test`     | 테스트 코드 추가 및 수정                |
+| `style`    | 코드 포맷팅, 세미콜론 누락 등 코드 스타일 변경, UI 및 CSS 변경   |
 | `refactor` | 기능 변경 없이 Production Code 리팩토링 |
-| `build`    | 빌드 관련 파일 수정                   |
-| `ci`       | CI 설정 파일 수정                   |
-| `perf`     | 성능 개선                         |
 | `chore`    | 자잘한 수정 및 빌드 업데이트              |
-| `rename`   | 파일 또는 폴더 이름 변경                |
 | `remove`   | 파일 또는 폴더 삭제                   |
 
 ### Commit Message Examples
@@ -45,13 +39,7 @@ feat: 로그인 기능 구현
 fix: 로그인 버튼 클릭 오류 수정
 docs: README 작성
 style: 코드 포맷팅
-design: 로그인 페이지 UI 수정
-test: 로그인 테스트 코드 추가
 refactor: 로그인 로직 리팩토링
-build: 패키지 의존성 수정
-ci: GitHub Actions 설정
-perf: 이미지 로딩 성능 개선
 chore: 불필요한 파일 정리
-rename: Login 컴포넌트 이름 변경
 remove: 사용하지 않는 파일 삭제
 ```
