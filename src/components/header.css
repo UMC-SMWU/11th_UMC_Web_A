@@ -1,0 +1,115 @@
+.header {
+  width: 100%;
+  border-bottom: 1px solid #eeeeee;
+  background-color: #ffffff;
+}
+
+.header-inner {
+  width: 1200px;
+  height: 80px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 왼쪽: 로고 + nav */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 42px;
+}
+
+.logo {
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #000000;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.logo-svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+  padding: 10px;
+  border: 2px solid black;
+  border-radius: 8px;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.header-nav a {
+  color: #000000;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.header-nav a.active {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* 오른쪽: 검색 + 로그인 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+}
+
+.search-button {
+  width: 40px;
+  height: 40px;
+
+  padding: 0;
+  border: none;
+  background: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.search-button img {
+  width: 20px;
+  height: 20px;
+}
+
+.login-button {
+  height: 40px;
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}

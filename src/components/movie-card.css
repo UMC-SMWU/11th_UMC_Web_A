@@ -1,0 +1,58 @@
+.movie-card {
+  width: 220px;
+}
+
+.movie-poster {
+  position: relative;
+  width: 220px;
+  height: 320px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.movie-poster img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.bookmark-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 8px;
+  border: 1px solid white;
+  background-color: rgba(0, 0, 0, 0.6);
+
+  color: #ffffff;
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+.movie-title {
+  margin: 12px 0 4px;
+
+  font-size: 16px;
+  font-weight: 600;
+  color: #222222;
+}
+
+.movie-release-date {
+  margin: 0;
+
+  font-size: 14px;
+  color: #888888;
+}
+
+.bookmark-button img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
