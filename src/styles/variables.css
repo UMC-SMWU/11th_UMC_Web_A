@@ -1,0 +1,8 @@
+:root {
+  --color-bg: #0d0d0d;
+  --color-surface: #1a1a1a;
+  --color-text: #ffffff;
+  --color-text-muted: #a0a0a0;
+  --color-primary: #ff3366;
+  --font-base: "Pretendard", sans-serif;
+}
