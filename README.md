@@ -1,6 +1,6 @@
 # 11th_UMC_Web_A
-Web_A팀의 레포지토리 입니다.
 
+Web_A팀의 레포지토리 입니다.
 
 ## 🌿 Branch Convention
 
@@ -22,15 +22,15 @@ Web_A팀의 레포지토리 입니다.
 
 ### Commit Type
 
-| Type       | Description                   |
-| ---------- | ----------------------------- |
-| `feat`     | 새로운 기능 추가                     |
-| `fix`      | 버그 수정                         |
-| `docs`     | 문서 수정                         |
-| `style`    | 코드 포맷팅, 세미콜론 누락 등 코드 스타일 변경, UI 및 CSS 변경   |
-| `refactor` | 기능 변경 없이 Production Code 리팩토링 |
-| `chore`    | 자잘한 수정 및 빌드 업데이트              |
-| `remove`   | 파일 또는 폴더 삭제                   |
+| Type       | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| `feat`     | 새로운 기능 추가                                               |
+| `fix`      | 버그 수정                                                      |
+| `docs`     | 문서 수정                                                      |
+| `style`    | 코드 포맷팅, 세미콜론 누락 등 코드 스타일 변경, UI 및 CSS 변경 |
+| `refactor` | 기능 변경 없이 Production Code 리팩토링                        |
+| `chore`    | 자잘한 수정 및 빌드 업데이트                                   |
+| `remove`   | 파일 또는 폴더 삭제                                            |
 
 ### Commit Message Examples
 
