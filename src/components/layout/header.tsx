@@ -1,4 +1,5 @@
 import "./header.css";
+import { Link } from "@tanstack/react-router";
 
 function Header() {
   return (
@@ -11,11 +12,11 @@ function Header() {
           </h1>
 
           <nav className="header-nav">
-            <a href="/" className="active">
+            <Link to="/" className="active">
               영화
-            </a>
-            <a href="#">검색</a>
-            <a href="#">내 정보</a>
+            </Link>
+            <Link to="/search">검색</Link>
+            {/* <Link to="/search">내 정보</Link> */}
           </nav>
         </div>
 
