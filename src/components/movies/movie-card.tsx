@@ -1,4 +1,5 @@
 import type { Movie } from "../../types/movie";
+import { Link } from "@tanstack/react-router";
 import "./movie-card.css";
 
 interface MovieCardProps {
@@ -10,7 +11,9 @@ function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
   return (
     <article className="movie-card">
       <div className="movie-poster">
-        <img src={movie.posterPath} alt={movie.title} />
+        <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
+          <img src={movie.posterPath} alt={movie.title} />
+        </Link>
 
         <button
           type="button"
@@ -27,6 +30,8 @@ function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
           />
         </button>
       </div>
+
+      <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}></Link>
 
       <h3 className="movie-title">{movie.title}</h3>
 
