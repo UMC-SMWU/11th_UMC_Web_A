@@ -1,6 +1,5 @@
 import type { Movie } from "../../types/movie";
 import { Link } from "@tanstack/react-router";
-import "./movie-card.css";
 
 interface MovieCardProps {
   movie: Movie;
@@ -9,18 +8,23 @@ interface MovieCardProps {
 
 function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
   return (
-    <article className="movie-card">
-      <div className="movie-poster">
+    <article className="w-[220px]">
+      <div className="relative h-[320px] w-[220px] overflow-hidden rounded-lg">
         <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
-          <img src={movie.posterPath} alt={movie.title} />
+          <img
+            className="block h-full w-full object-cover"
+            src={movie.posterPath}
+            alt={movie.title}
+          />
         </Link>
 
         <button
           type="button"
-          className="bookmark-button"
+          className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white bg-black/60 text-xl text-white"
           onClick={() => onToggleBookmark(movie.id)}
         >
           <img
+            className="h-7 w-7"
             src={
               movie.isBookmarked
                 ? "/icons/bookmark.svg"
@@ -31,11 +35,13 @@ function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
         </button>
       </div>
 
-      <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}></Link>
+      <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
+        <h3 className="mt-3 mb-1 text-base font-semibold text-[#222222]">
+          {movie.title}
+        </h3>
+      </Link>
 
-      <h3 className="movie-title">{movie.title}</h3>
-
-      <p className="movie-release-date">{movie.releaseDate}</p>
+      <p className="m-0 text-sm text-[#888888]">{movie.releaseDate}</p>
     </article>
   );
 }
