@@ -1,15 +1,18 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { movies } from "../../data/movies";
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
   const [searchText, setSearchText] = useState(query ?? "");
+  const [prevQuery, setPrevQuery] = useState(query);
 
-  useEffect(() => {
+  // query가 바뀐 경우에만 입력값을 맞춰줌
+  if (query !== prevQuery) {
+    setPrevQuery(query);
     setSearchText(query ?? "");
-  }, [query]);
+  }
 
   const normalizedQuery = query?.trim().toLowerCase() ?? "";
   const searchResults = normalizedQuery
