@@ -1,20 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+
+  --color-ink: #17191e;
+  --color-subtle: #4b5262;
+  --color-muted: #969da8;
+  --color-line: #e3e6eb;
+  --color-surface: #f6f7f9;
+  --color-brand: #2f6fed;
+  --color-brand-hover: #2760d1;
+}
+
 :root {
   color-scheme: light;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background-color: #f6f7f9;
-  color: #17191e;
-}
-
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
