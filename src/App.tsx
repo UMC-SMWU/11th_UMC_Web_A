@@ -1,8 +1,14 @@
-import MovieListPage from "./pages/movie-list-page";
+import MovieListPage from "./pages/movies/movie-list-page";
+import Header from "./components/layout/header";
 import "./styles/variables.css";
 
 function App() {
-  return <MovieListPage />;
+  return (
+    <>
+      <Header />
+      <MovieListPage />
+    </>
+  );
 }
 
 export default App;
