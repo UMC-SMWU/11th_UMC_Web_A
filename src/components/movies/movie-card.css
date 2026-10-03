@@ -1,11 +1,14 @@
 .movie-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.movie-card__poster-wrapper {
-  position: relative;
+.movie-card__link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .movie-card__poster {
