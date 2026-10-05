@@ -15,7 +15,11 @@ function MovieListPage() {
     );
   };
 
-  return <MovieGrid movies={movies} onToggleBookmark={handleToggleBookmark} />;
+  return (
+    <main>
+      <MovieGrid movies={movies} onToggleBookmark={handleToggleBookmark} />
+    </main>
+  );
 }
 
 export default MovieListPage;

@@ -6,14 +6,17 @@ function Header() {
       <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between px-3 sm:gap-6 sm:px-4">
         {/* 왼쪽: 로고 + nav */}
         <div className="flex min-w-0 items-center gap-3 sm:gap-[42px]">
-          <h1 className="m-0 flex shrink-0 items-center gap-2 whitespace-nowrap text-xl font-bold text-black sm:text-2xl">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xl font-bold text-black sm:text-2xl"
+          >
             <img
               src="/icons/movie.svg"
               alt=""
               className="block h-10 w-10 rounded-lg border-2 border-black p-1"
             />
             UMCine
-          </h1>
+          </Link>
 
           <nav className="flex shrink-0 items-center gap-3 sm:gap-8">
             <Link

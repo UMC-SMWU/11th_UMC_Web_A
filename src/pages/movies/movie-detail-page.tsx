@@ -112,6 +112,7 @@ export function MovieDetailPage() {
               <button
                 key={star}
                 type="button"
+                aria-label={`${star}점`}
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
