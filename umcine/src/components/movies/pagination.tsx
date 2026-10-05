@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
+import { cn } from "../../utils/cn";
 
 interface PaginationProps {
   currentPage: number;
@@ -6,7 +6,7 @@ interface PaginationProps {
   onChangePage: (page: number) => void;
 }
 
-export default function Pagination({
+export function Pagination({
   currentPage,
   totalPages,
   onChangePage,
@@ -16,15 +16,15 @@ export default function Pagination({
   const isLastPage = currentPage >= totalPages;
 
   return (
-    <nav className="flex h-9 items-center justify-center gap-3">
+    <nav aria-label="페이지 이동" className="flex h-9 items-center justify-center gap-3">
       <button
         type="button"
         aria-label="이전 페이지"
         disabled={isFirstPage}
         onClick={() => onChangePage(currentPage - 1)}
-        className="text-page-arrow disabled:opacity-50"
+        className="disabled:opacity-50"
       >
-        <ChevronLeftIcon className="h-6 w-6" />
+        <img src="/icons/movie-icons/chevron-left.svg" alt="" aria-hidden="true" className="size-6" />
       </button>
 
       <div className="flex items-center gap-1">
@@ -34,11 +34,10 @@ export default function Pagination({
             type="button"
             aria-current={page === currentPage ? "page" : undefined}
             onClick={() => onChangePage(page)}
-            className={
-              page === currentPage
-                ? "h-9 w-9 rounded-[7px] bg-ink text-[13px] leading-4 font-bold text-white"
-                : "h-9 w-9 rounded-[7px] bg-white text-[13px] leading-4 font-bold text-sub"
-            }
+            className={cn(
+              "size-9 rounded-[7px] text-[13px] leading-4 font-bold",
+              page === currentPage ? "bg-ink text-white" : "bg-white text-sub",
+            )}
           >
             {page}
           </button>
@@ -50,9 +49,9 @@ export default function Pagination({
         aria-label="다음 페이지"
         disabled={isLastPage}
         onClick={() => onChangePage(currentPage + 1)}
-        className="text-page-arrow disabled:opacity-50"
+        className="disabled:opacity-50"
       >
-        <ChevronRightIcon className="h-6 w-6" />
+        <img src="/icons/movie-icons/chevron-right.svg" alt="" aria-hidden="true" className="size-6" />
       </button>
     </nav>
   );
