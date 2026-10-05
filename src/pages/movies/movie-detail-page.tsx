@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { movies } from "../../data/movies";
+import { cn } from "../../utils/cn";
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
@@ -108,11 +109,13 @@ export function MovieDetailPage() {
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                className={`rounded-lg border border-[#E3E6EB] bg-white px-1.5 py-1 ${
-                  star <= (hoverRating || rating)
-                    ? "text-yellow-400"
-                    : "text-[#606774]"
-                }`}
+                className={cn(
+                  "rounded-lg border border-[#E3E6EB] bg-white px-1.5 py-1",
+                  {
+                    "text-yellow-400": star <= (hoverRating || rating),
+                    "text-[#606774]": star > (hoverRating || rating),
+                  },
+                )}
               >
                 ★
               </button>
