@@ -1,11 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { movies as initialMovies } from "../../data/movies";
 import type { Movie } from "../../types/movie";
 import MovieGrid from "../../components/movies/movie-grid";
 import Pagination from "../../components/movies/pagination";
+import {
+  readBookmarkIds,
+  saveBookmarkIds,
+} from "../../utils/bookmark-storage";
 
 export default function MovieListPage() {
-  const [movies, setMovies] = useState<Movie[]>(initialMovies);
+  // 1. 초기값 함수에서 readBookmarkIds() 호출
+  const [movies, setMovies] = useState<Movie[]>(() => {
+    const bookmarkIds = readBookmarkIds();
+    return initialMovies.map((movie) => ({
+      ...movie,
+      isBookmarked: bookmarkIds.includes(movie.id),
+    }));
+  });
+
+  // 2. 북마크 ID 배열이 바뀔 때 saveBookmarkIds() 호출
+  useEffect(() => {
+    const bookmarkIds = movies
+      .filter((movie) => movie.isBookmarked)
+      .map((movie) => movie.id);
+    saveBookmarkIds(bookmarkIds);
+  }, [movies]);
 
   const handleToggleBookmark = (id: number) => {
     setMovies((prev) =>
