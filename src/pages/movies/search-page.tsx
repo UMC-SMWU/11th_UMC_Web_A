@@ -46,19 +46,7 @@ export function SearchPage() {
             className="relative flex w-full max-w-xl items-center rounded-2xl border border-gray-900 bg-white p-2 shadow-sm focus-within:shadow-md"
           >
             <div className="pointer-events-none pl-3 text-gray-400">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <img src="/icons/search.svg" alt="검색" className="h-6 w-6" />
             </div>
 
             <input
