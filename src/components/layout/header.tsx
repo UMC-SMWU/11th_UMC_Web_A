@@ -18,7 +18,8 @@ function Header() {
           <nav className="flex shrink-0 items-center gap-3 sm:gap-8">
             <Link
               to="/"
-              className="text-base font-medium text-black no-underline underline-offset-2"
+              className="text-base font-medium text-black underline-offset-2"
+              activeOptions={{ exact: true }}
               activeProps={{ className: "underline" }}
             >
               영화
@@ -26,7 +27,7 @@ function Header() {
 
             <Link
               to="/search"
-              className="text-base font-medium text-black no-underline underline-offset-2"
+              className="text-base font-medium text-black underline-offset-2"
               activeProps={{ className: "underline" }}
             >
               검색
