@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { movies } from "../../data/movies";
-import { readBookmarkIds, saveBookmarkIds } from "../../utils/bookmark-storage";
 import { cn } from "../../utils/cn";
-
+import { useBookmarkStore } from "../../stores/bookmark-store";
 export function MovieDetailPage() {
-  const { movieId } = useParams({ from: "/movies/$movieId" });
-  const movie = movies.find((item) => item.id === Number(movieId));
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useState(() =>
-    readBookmarkIds().includes(Number(movieId)),
-  );
 
+  const { movieId } = useParams({ from: "/movies/$movieId" });
+  const movie = movies.find((item) => item.id === Number(movieId));
+
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(Number(movieId)),
+  );
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
   if (!movie) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center text-lg text-gray-500">
@@ -20,16 +21,6 @@ export function MovieDetailPage() {
       </main>
     );
   }
-
-  const handleToggleBookmark = () => {
-    const bookmarkIds = readBookmarkIds();
-    const nextBookmarkIds = isBookmarked
-      ? bookmarkIds.filter((id) => id !== movie.id)
-      : [...bookmarkIds, movie.id];
-
-    saveBookmarkIds(nextBookmarkIds);
-    setIsBookmarked(!isBookmarked);
-  };
 
   return (
     <main className="min-h-screen bg-[#F6F7F9] text-gray-900 pb-16">
@@ -95,19 +86,10 @@ export function MovieDetailPage() {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={handleToggleBookmark}
-                className="inline-flex items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm bg-[#2563EB]"
+                onClick={() => toggleBookmark(movie.id)}
+                className="rounded-md border border-gray-300 bg-[#2563EB] px-4 py-2 text-sm font-extrabold text-[#FFFFFF]"
               >
-                <img
-                  src={
-                    isBookmarked
-                      ? "/icons/bookmark.svg"
-                      : "/icons/bookmark-outline.svg"
-                  }
-                  alt=""
-                  className="h-5 w-5 translate-y-[1px]"
-                />
-                <span className="leading-none">즐겨찾기</span>
+                {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기 등록"}
               </button>
             </div>
           </div>
