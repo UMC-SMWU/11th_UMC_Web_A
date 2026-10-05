@@ -8,6 +8,7 @@ export function MovieDetailPage() {
   const movie = movies.find((item) => item.id === Number(movieId));
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   if (!movie) {
     return (
@@ -81,10 +82,15 @@ export function MovieDetailPage() {
             <div className="pt-2">
               <button
                 type="button"
+                onClick={() => setIsBookmarked((prev) => !prev)}
                 className="inline-flex items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm bg-[#2563EB]"
               >
                 <img
-                  src="/icons/bookmark-outline.svg"
+                  src={
+                    isBookmarked
+                      ? "/icons/bookmark.svg"
+                      : "/icons/bookmark-outline.svg"
+                  }
                   alt=""
                   className="h-5 w-5 translate-y-[1px]"
                 />
