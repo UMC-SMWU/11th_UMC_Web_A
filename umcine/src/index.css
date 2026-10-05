@@ -1,0 +1,28 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+
+  --color-ink: #17191e;       /* 제목, 본문, 검정 버튼 */
+  --color-sub: #606774;       /* 보조 텍스트, 아이콘, 비활성 메뉴 */
+  --color-muted: #969da8;     /* placeholder, 메타 정보 */
+  --color-line: #e3e6eb;      /* 테두리, 구분선, 아바타 배경 */
+  --color-canvas: #f6f7f9;    /* 페이지 배경 */
+  --color-primary: #2563eb;   /* 파란 버튼, 텍스트 링크 */
+  --color-danger: #d92d20;    /* 회원 탈퇴 */
+  --color-page-arrow: #d9e5ff;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
