@@ -8,8 +8,8 @@ interface MovieCardProps {
 
 function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
   return (
-    <article className="w-[220px]">
-      <div className="relative h-[320px] w-[220px] overflow-hidden rounded-lg">
+    <article className="w-full">
+      <div className="relative aspect-[11/16] w-full overflow-hidden rounded-lg">
         <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
           <img
             className="block h-full w-full object-cover"

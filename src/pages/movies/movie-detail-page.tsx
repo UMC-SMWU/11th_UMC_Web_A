@@ -56,7 +56,7 @@ export function MovieDetailPage() {
       </section>
 
       {/* 본문 콘텐츠 영역 */}
-      <section className="mx-auto mt-8 grid max-w-8xl grid-cols-1 gap-8 px-25 md:grid-cols-3 background-[#F6F7F9]">
+      <section className="mx-auto mt-8 grid max-w-full grid-cols-1 gap-8 px-25 md:grid-cols-3 bg-[#F6F7F9]">
         <div className="flex flex-col gap-6 md:col-span-2 md:flex-row">
           {/* 포스터 */}
           <div className="shrink-0">
