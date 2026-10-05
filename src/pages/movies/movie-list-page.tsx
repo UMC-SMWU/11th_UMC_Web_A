@@ -2,7 +2,7 @@ import { useState } from "react";
 import { movies as initialMovies } from "../../data/movies";
 import MovieGrid from "../../components/movies/movie-grid";
 
-function MovieListPage() {
+export function MovieListPage() {
   const [movies, setMovies] = useState(initialMovies);
 
   const handleToggleBookmark = (movieId: number) => {
@@ -21,5 +21,3 @@ function MovieListPage() {
     </main>
   );
 }
-
-export default MovieListPage;
