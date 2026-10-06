@@ -1,38 +1,62 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { databaseProviders } from './database.provider.js';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
-import { BookController } from './book.controller.js';
-import { BookService } from './book.service.js';
-import { BookRepository } from './book.repository.js';
+import { BooksModule } from './books/books.module.js';
 
-import { RentalController } from './rental.controller.js';
-import { RentalService } from './rental.service.js';
-import { RentalRepository } from './rental.repository.js';
+import { RentalController } from './rentals/rental.controller.js';
+import { RentalService } from './rentals/rental.service.js';
+import { RentalRepository } from './rentals/rental.repository.js';
 
 @Module({
   imports: [
-    // 환경 변수를 애플리케이션 전역에서 사용 가능하도록 설정
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    // TypeORM으로 MySQL 연결
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+
+        host: configService.getOrThrow<string>('DB_HOST'),
+        port: 3306,
+        username: configService.getOrThrow<string>('DB_USER'),
+        password: configService.getOrThrow<string>('DB_PASSWORD'),
+        database: configService.getOrThrow<string>('DB_NAME'),
+
+        autoLoadEntities: true,
+        synchronize: false,
+      }),
+    }),
+
+    // Book 관련 기능
+    BooksModule,
   ],
 
-  controllers: [AppController, BookController, RentalController],
+  controllers: [
+    AppController,
+
+    // BookController는 BooksModule로 이동했으므로 여기서 제거
+    RentalController,
+  ],
 
   providers: [
-    ...databaseProviders, // 1. DB 커넥션 풀을 부품으로 등록
+    ...databaseProviders,
+
     AppService,
-    BookService,
-    BookRepository,
+
+    // BookService, BookRepository도 BooksModule로 이동
     RentalService,
     RentalRepository,
   ],
 
-  exports: [...databaseProviders], // 2. 다른 모듈/서비스에서도 쓸 수 있게 공개
+  exports: [...databaseProviders],
 })
 export class AppModule {}
