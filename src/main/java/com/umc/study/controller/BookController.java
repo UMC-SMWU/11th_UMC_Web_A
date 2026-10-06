@@ -4,6 +4,7 @@ import com.umc.study.dto.BookResponse;
 import com.umc.study.dto.CreateBookRequest;
 import com.umc.study.service.BookService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class BookController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public String createBook(@RequestBody CreateBookRequest request) {
         bookService.createBook(request);
         return "도서 등록이 완료되었습니다!";
