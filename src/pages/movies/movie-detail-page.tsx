@@ -1,4 +1,5 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { BookmarkButton } from "../../components/movies/bookmark-button";
 import { movies } from "../../data/movies";
 
 export function MovieDetailPage() {
@@ -54,6 +55,7 @@ export function MovieDetailPage() {
           </div>
           <h2 className="mt-6 text-xl font-bold">{movie.tagline}</h2>
           <p className="max-w-[640px] text-base leading-7 text-white/85">{movie.overview}</p>
+          <BookmarkButton movieId={movie.id} variant="text" className="mt-4 self-start" />
         </div>
       </div>
     </main>
