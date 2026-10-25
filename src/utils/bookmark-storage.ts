@@ -1,3 +1,5 @@
+// 워크북 실습용
+
 const BOOKMARK_STORAGE_KEY = "umcine-bookmarks";
 
 export function readBookmarkIds(): number[] {
