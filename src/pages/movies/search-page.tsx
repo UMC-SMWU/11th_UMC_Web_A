@@ -1,4 +1,4 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { movies } from "../../data/movies";
@@ -99,8 +99,26 @@ export function SearchPage() {
                   className='absolute right-1.5 top-1.5 h-7 w-7 bg-black/55 text-white'
                 />
               </div>
-              <div className='flex-1'>
-                {/* 제목·원제·개봉일·줄거리·상세 보기 그대로 */}
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-[#111111]">
+                  {movie.title}
+                </h3>
+                <p className="mt-1 text-sm text-[#999999]">
+                  {movie.originalTitle}
+                </p>
+                <p className="mt-1 text-sm text-[#999999]">
+                  {movie.releaseDate}
+                </p>
+                <p className="mt-2 line-clamp-2 text-sm text-[#333333]">
+                  {movie.overview}
+                </p>
+                <Link
+                  to="/movies/$movieId"
+                  params={{ movieId: String(movie.id) }}
+                  className="mt-2 inline-block text-sm font-medium text-blue-600 hover:underline"
+                >
+                  상세 보기
+                </Link>
               </div>
             </li>
           ))}
