@@ -34,7 +34,7 @@ export function BookmarkButton({ movieId, className }: BookmarkButtonProps) {
             : "/icons/movie-icons/bookmark-outline.svg"
         }
         alt=""
-        className="h-4 w-4"
+        className="h-5 w-5 brightness-0 invert"
       />
     </button>
   );
