@@ -45,7 +45,8 @@ export function BookmarkButton({ movieId, variant = "icon", className }: Bookmar
       aria-label={label}
       onClick={() => toggleBookmark(movieId)}
     >
-      <img className="size-[18px]" src={iconSrc} alt="" />
+      {/* 아이콘 버튼 배경이 어두워서, 검정색 outline 아이콘은 invert로 흰색으로 바꿔 보여 줘요. */}
+      <img className={cn("size-[18px]", !isBookmarked && "invert")} src={iconSrc} alt="" />
     </button>
   );
 }
