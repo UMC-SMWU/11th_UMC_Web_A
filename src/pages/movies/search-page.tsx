@@ -1,7 +1,112 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
+import { searchMovies } from "../../api/movies/search-movies";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { StatusMessage } from "../../components/common/status-message";
 import { BookmarkButton } from "../../components/movies/bookmark-button";
-import { movies } from "../../data/movies";
+import { MoviePoster } from "../../components/movies/movie-poster";
+import { formatReleaseDate } from "../../utils/movies/format-movie";
+
+interface SearchResultsProps {
+  query: string;
+}
+
+function SearchResults({ query }: SearchResultsProps) {
+  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // "다시 시도"를 누르면 값이 바뀌어서 같은 검색어로 다시 요청해요.
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    // 검색어가 바뀌면 이 컴포넌트가 정리되면서 이전 응답은 무시돼요.
+    // 이전 응답이 늦게 도착해도 현재 검색 결과를 덮어쓰지 않아요.
+    let ignore = false;
+
+    searchMovies({ query })
+      .then((response) => {
+        if (ignore) return;
+        setMovies(response.results);
+        setTotalResults(response.total_results);
+      })
+      .catch(() => {
+        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [query, retryCount]);
+
+  function handleRetry() {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setRetryCount((count) => count + 1);
+  }
+
+  // 로딩 -> 오류 -> 빈 결과 -> 성공 순서로 화면을 구분해요.
+  if (isLoading) {
+    return <StatusMessage>검색 결과를 불러오는 중이에요.</StatusMessage>;
+  }
+
+  if (errorMessage) {
+    return (
+      <StatusMessage tone="error" onRetry={handleRetry}>
+        {errorMessage}
+      </StatusMessage>
+    );
+  }
+
+  return (
+    <section>
+      <h2 className="text-xl font-bold text-ink">‘{query}’ 검색 결과</h2>
+      <p className="mt-1 mb-5 text-sm text-muted">
+        영화 {totalResults}편{movies.length < totalResults ? ` 중 ${movies.length}편 표시` : ""}
+      </p>
+
+      {movies.length === 0 ? (
+        <StatusMessage>검색 결과가 없어요.</StatusMessage>
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {movies.map((movie) => (
+            <li
+              key={movie.id}
+              className="flex gap-4 rounded-[10px] border border-line bg-white p-4 md:gap-6 md:p-5"
+            >
+              <MoviePoster
+                posterPath={movie.poster_path}
+                title={movie.title}
+                className="aspect-[2/3] w-24 shrink-0 rounded-lg md:w-[120px]"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <h3 className="text-lg font-extrabold text-ink">{movie.title}</h3>
+                <p className="text-[13px] text-muted">{movie.original_title}</p>
+                <p className="text-[13px] text-muted">{formatReleaseDate(movie.release_date)}</p>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-subtle">
+                  {movie.overview || "줄거리 정보가 없어요."}
+                </p>
+                <div className="mt-auto flex items-center gap-4 pt-3">
+                  <Link
+                    to="/movies/$movieId"
+                    params={{ movieId: String(movie.id) }}
+                    className="text-sm font-bold text-brand hover:text-brand-hover"
+                  >
+                    상세 보기
+                  </Link>
+                  <BookmarkButton movieId={movie.id} variant="text" />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
@@ -17,14 +122,6 @@ export function SearchPage() {
   }
 
   const trimmedQuery = query?.trim() ?? "";
-  const normalizedQuery = trimmedQuery.toLowerCase();
-  const searchResults = normalizedQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,50 +153,11 @@ export function SearchPage() {
         </button>
       </form>
 
-      {!normalizedQuery ? (
-        <p className="py-10 text-center text-[15px] text-muted">검색어를 입력해 주세요.</p>
+      {/* 빈 검색어는 요청하지 않고 안내만 보여 줘요. 검색어가 바뀌면 key가 달라져 상태가 새로 시작돼요. */}
+      {trimmedQuery ? (
+        <SearchResults key={trimmedQuery} query={trimmedQuery} />
       ) : (
-        <section>
-          <h2 className="text-xl font-bold text-ink">‘{trimmedQuery}’ 검색 결과</h2>
-          <p className="mt-1 mb-5 text-sm text-muted">영화 {searchResults.length}편</p>
-
-          {searchResults.length === 0 ? (
-            <p className="py-10 text-center text-[15px] text-muted">검색 결과가 없어요.</p>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {searchResults.map((movie) => (
-                <li
-                  key={movie.id}
-                  className="flex gap-4 rounded-[10px] border border-line bg-white p-4 md:gap-6 md:p-5"
-                >
-                  <img
-                    className="aspect-[2/3] w-24 shrink-0 rounded-lg object-cover md:w-[120px]"
-                    src={movie.posterPath}
-                    alt={`${movie.title} 포스터`}
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <h3 className="text-lg font-extrabold text-ink">{movie.title}</h3>
-                    <p className="text-[13px] text-muted">{movie.originalTitle}</p>
-                    <p className="text-[13px] text-muted">{movie.releaseDate}</p>
-                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-subtle">
-                      {movie.overview}
-                    </p>
-                    <div className="mt-auto flex items-center gap-4 pt-3">
-                      <Link
-                        to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
-                        className="text-sm font-bold text-brand hover:text-brand-hover"
-                      >
-                        상세 보기
-                      </Link>
-                      <BookmarkButton movieId={movie.id} variant="text" />
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <StatusMessage>검색어를 입력해 주세요.</StatusMessage>
       )}
     </main>
   );

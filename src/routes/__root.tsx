@@ -1,11 +1,13 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Header } from "../components/layout/header";
+import { TmdbAttribution } from "../components/layout/tmdb-attribution";
 
 export const Route = createRootRoute({
   component: () => (
     <div className="flex min-h-screen flex-col bg-surface text-ink">
       <Header />
       <Outlet />
+      <TmdbAttribution />
     </div>
   ),
   notFoundComponent: () => (

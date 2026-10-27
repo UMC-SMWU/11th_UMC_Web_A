@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import type { Movie } from "../../types/movie";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { formatReleaseDate } from "../../utils/movies/format-movie";
 import { BookmarkButton } from "./bookmark-button";
+import { MoviePoster } from "./movie-poster";
 
 interface MovieCardProps {
-  movie: Movie;
+  movie: TmdbMovieListItem;
 }
 
 export function MovieCard({ movie }: MovieCardProps) {
@@ -13,10 +15,10 @@ export function MovieCard({ movie }: MovieCardProps) {
     <article className="flex w-full flex-col gap-1">
       <div className="relative h-[274px] w-full overflow-hidden rounded-[10px] bg-surface">
         <Link to="/movies/$movieId" params={detailParams} className="block size-full">
-          <img
-            className="block size-full object-cover"
-            src={movie.posterPath}
-            alt={`${movie.title} 포스터`}
+          <MoviePoster
+            posterPath={movie.poster_path}
+            title={movie.title}
+            className="size-full"
             loading="lazy"
           />
         </Link>
@@ -30,7 +32,7 @@ export function MovieCard({ movie }: MovieCardProps) {
       >
         {movie.title}
       </Link>
-      <div className="text-xs leading-none text-muted">{movie.releaseDate}</div>
+      <div className="text-xs leading-none text-muted">{formatReleaseDate(movie.release_date)}</div>
     </article>
   );
 }
