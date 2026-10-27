@@ -1,15 +1,11 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { movies } from "../../data/movies";
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
   const [searchText, setSearchText] = useState(query ?? "");
-
-  useEffect(() => {
-    setSearchText(query ?? "");
-  }, [query]);
 
   const normalizedQuery = query?.trim().toLowerCase() ?? "";
   const searchResults = normalizedQuery
@@ -79,19 +75,7 @@ export function SearchPage() {
             className="relative mb-4 flex w-full items-center rounded-lg border border-gray-200 bg-white p-2 shadow-sm focus-within:border-gray-400"
           >
             <div className="pointer-events-none pl-3 text-gray-400">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <img src="/icons/search.svg" alt="검색" className="h-8 w-8" />
             </div>
 
             <input
@@ -108,19 +92,7 @@ export function SearchPage() {
                 onClick={handleClear}
                 className="p-1.5 text-gray-400 hover:text-gray-600"
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <img src="/icons/close.svg" alt="검색" className="h-6 w-6" />
               </button>
             )}
 
