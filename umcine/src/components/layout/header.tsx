@@ -4,6 +4,7 @@ import { cn } from "../../utils/cn";
 const MENUS = [
   { label: "영화", to: "/" },
   { label: "검색", to: "/search" },
+  { label: "내 정보", to: "/my" },
 ] as const;
 
 export function Header() {
@@ -34,9 +35,6 @@ export function Header() {
               )}
             </Link>
           ))}
-          <button type="button" className="text-sm leading-[17px] font-bold text-sub">
-            내 정보
-          </button>
         </nav>
       </div>
 
