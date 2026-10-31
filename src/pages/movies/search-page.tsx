@@ -1,26 +1,23 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 import { BookmarkButton } from "../../components/bookmark-button";
+import Pagination from "../../components/movies/pagination";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
-interface SearchResult {
-  query: string;
-  movies: TmdbMovieListItem[];
-  errorMessage: string | null;
-}
+// TMDB는 total_pages가 커도 500페이지까지만 조회할 수 있어요
+const MAX_PAGE = 500;
 
 export function SearchPage() {
-  const { query: rawQuery } = useSearch({ from: "/search" });
+  const { query: rawQuery, page = 1 } = useSearch({ from: "/search" });
   const query = rawQuery ?? "";
   const normalizedQuery = query.trim();
   const navigate = useNavigate({ from: "/search" });
 
   const [searchText, setSearchText] = useState(query);
   const [prevQuery, setPrevQuery] = useState(query);
-  const [result, setResult] = useState<SearchResult | null>(null);
 
   // URL의 검색어가 바뀌면 입력창도 맞춤 (렌더링 중 동기화)
   if (query !== prevQuery) {
@@ -28,48 +25,26 @@ export function SearchPage() {
     setSearchText(query);
   }
 
-  useEffect(() => {
-    if (!normalizedQuery) return; // 빈 검색어는 요청하지 않음
+  const searchQuery = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery, page }],
+    queryFn: () => searchMovies({ query: normalizedQuery, page }),
+    enabled: normalizedQuery.length > 0, // 빈 검색어는 요청하지 않음
+  });
 
-    let ignore = false;
-
-    searchMovies({ query: normalizedQuery })
-      .then((response) => {
-        if (!ignore) {
-          setResult({
-            query: normalizedQuery,
-            movies: response.results,
-            errorMessage: null,
-          });
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setResult({
-            query: normalizedQuery,
-            movies: [],
-            errorMessage: "검색 결과를 불러오지 못했어요.",
-          });
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [normalizedQuery]);
-
-  // 현재 검색어의 결과일 때만 사용하고, 로딩은 계산으로 판단
-  const currentResult = result?.query === normalizedQuery ? result : null;
-  const isLoading = Boolean(normalizedQuery) && currentResult === null;
-  const movies = currentResult?.movies ?? [];
-  const errorMessage = currentResult?.errorMessage ?? null;
+  const movies = searchQuery.data?.results ?? [];
+  const totalResults = searchQuery.data?.total_results ?? 0;
+  const totalPages = Math.min(searchQuery.data?.total_pages ?? 0, MAX_PAGE);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextQuery = searchText.trim();
     navigate({
-      search: nextQuery ? { query: nextQuery } : {},
+      search: nextQuery ? { query: nextQuery, page: 1 } : {},
     });
+  }
+
+  function handlePageChange(nextPage: number) {
+    navigate({ search: (prev) => ({ ...prev, page: nextPage }) });
   }
 
   const searchBar = (
@@ -117,15 +92,17 @@ export function SearchPage() {
       </h2>
 
       {/* 2. 로딩 → 3. 오류 → 4. 빈 결과 → 5. 성공 */}
-      {isLoading ? (
+      {searchQuery.isLoading ? (
         <p className="text-[#999999]">검색 결과를 불러오는 중이에요.</p>
-      ) : errorMessage ? (
-        <p className="text-[#999999]">{errorMessage}</p>
-      ) : movies.length === 0 ? (
+      ) : searchQuery.isError ? (
+        <p className="text-[#999999]">검색 결과를 불러오지 못했어요.</p>
+      ) : searchQuery.isSuccess && movies.length === 0 ? (
         <p className="text-[#999999]">영화를 찾을 수 없어요.</p>
       ) : (
         <>
-          <p className="mb-6 text-sm text-[#999999]">영화 {movies.length}편</p>
+          <p className="mb-6 text-sm text-[#999999]">
+            영화 {totalResults}편 · {page}페이지
+          </p>
           <ul className="flex flex-col gap-6">
             {movies.map((movie) => {
               const posterUrl = getTmdbPosterUrl(movie.poster_path);
@@ -177,6 +154,12 @@ export function SearchPage() {
               );
             })}
           </ul>
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </main>
