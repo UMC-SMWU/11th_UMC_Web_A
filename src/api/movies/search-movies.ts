@@ -1,28 +1,13 @@
 import { tmdbClient } from "../tmdb-client";
 import type { TmdbMovieListResponse } from "./models";
 
-interface SearchMoviesRequest {
+interface SearchMoviesParams {
   query: string;
   page?: number;
 }
 
-type SearchMoviesResponse = TmdbMovieListResponse;
-
-function searchMovies({ query, page = 1 }: SearchMoviesRequest) {
+export function searchMovies({ query, page = 1 }: SearchMoviesParams) {
   return tmdbClient
-    .get("search/movie", {
-      searchParams: {
-        query,
-        language: "ko-KR",
-        include_adult: false,
-        page,
-      },
-    })
-    .json<SearchMoviesResponse>();
+    .get("search/movie", { searchParams: { query, page } })
+    .json<TmdbMovieListResponse>();
 }
-
-export {
-  searchMovies,
-  type SearchMoviesRequest,
-  type SearchMoviesResponse,
-};
