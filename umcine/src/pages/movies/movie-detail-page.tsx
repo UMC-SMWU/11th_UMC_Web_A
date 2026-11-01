@@ -1,9 +1,8 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react"; // ✅ 추가: 요청 결과를 state에 담고, Effect로 요청
-import { getMovieDetail } from "../../api/movies/get-movie-detail"; // ✅ 추가: TMDB 상세 요청 함수
-import type { TmdbMovieDetail } from "../../api/movies/models"; // ✅ 추가: 상세 응답 타입
-import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image"; // ✅ 추가: 이미지 주소 만들기
-import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message"; // ✅ 추가: 404 구분
+import { useQuery } from "@tanstack/react-query";
+import { getMovieDetail } from "../../api/movies/get-movie-detail";
+import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
+import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
 import { BookmarkButton } from "../../components/bookmark-button";
 
 function formatRuntime(runtime: number | null) {
@@ -22,45 +21,16 @@ export function MovieDetailPage() {
 
   const parsedMovieId = Number(movieId);
   const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
-  // 요청할 ID (올바르지 않으면 null)
-  const requestMovieId = isValidMovieId ? parsedMovieId : null;
 
-  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(requestMovieId !== null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // 올바른 영화 번호일 때만 요청해요.
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", parsedMovieId],
+    queryFn: () => getMovieDetail(parsedMovieId),
+    enabled: isValidMovieId,
+    staleTime: 30 * 1000,
+  });
 
-  const [prevMovieId, setPrevMovieId] = useState(requestMovieId);
-  if (requestMovieId !== prevMovieId) {
-    setPrevMovieId(requestMovieId);
-    setMovie(null);
-    setErrorMessage(null);
-    setIsLoading(requestMovieId !== null);
-  }
-
-  //영화 ID가  바뀔 때마다 TMDB에 상세 정보 요청
-  useEffect(() => {
-    if (requestMovieId === null) return; // 올바르지 않은 번호면 요청 안 함
-
-    let ignore = false;
-
-    getMovieDetail(requestMovieId)
-      .then((response) => {
-        if (!ignore) setMovie(response);
-      })
-      .catch((error) => {
-        // 404면 "영화를 찾을 수 없어요.", 나머지는 "불러오지 못했어요."
-        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [requestMovieId]);
-
-  // 번호 오류, 로딩, 에러 상태를 순서대로 추가
+  // 번호 오류 → 로딩 → 에러 순서로 확인해요.
   if (!isValidMovieId) {
     return (
       <main className="px-20 py-20 text-center text-sub">
@@ -69,7 +39,7 @@ export function MovieDetailPage() {
     );
   }
 
-  if (isLoading) {
+  if (movieDetailQuery.isPending) {
     return (
       <main className="px-20 py-20 text-center text-sub">
         영화 정보를 불러오는 중이에요.
@@ -77,19 +47,15 @@ export function MovieDetailPage() {
     );
   }
 
-  if (errorMessage) {
-    return (
-      <main className="px-20 py-20 text-center text-sub">{errorMessage}</main>
-    );
-  }
-
-  if (!movie) {
+  if (movieDetailQuery.isError) {
     return (
       <main className="px-20 py-20 text-center text-sub">
-        영화를 찾을 수 없어요.
+        {getMovieDetailErrorMessage(movieDetailQuery.error)}
       </main>
     );
   }
+
+  const movie = movieDetailQuery.data;
 
   // 이미지 주소 만들기 (없으면 null)
   const backdropUrl = getTmdbBackdropUrl(movie.backdrop_path);
@@ -105,7 +71,7 @@ export function MovieDetailPage() {
     .join(" · ");
 
   return (
-      <main className="relative min-h-[calc(100vh-148px)] overflow-hidden">
+    <main className="relative min-h-[calc(100vh-148px)] overflow-hidden">
       {backdropUrl ? (
         <img
           src={backdropUrl}

@@ -11,7 +11,18 @@ export function Pagination({
   totalPages,
   onChangePage,
 }: PaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const VISIBLE_PAGE_COUNT = 5;
+
+  const endPage = Math.min(
+    totalPages,
+    Math.max(currentPage + Math.floor(VISIBLE_PAGE_COUNT / 2), VISIBLE_PAGE_COUNT),
+  );
+  const startPage = Math.max(1, endPage - VISIBLE_PAGE_COUNT + 1);
+
+  const pages = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index,
+  );
   const isFirstPage = currentPage <= 1;
   const isLastPage = currentPage >= totalPages;
 
