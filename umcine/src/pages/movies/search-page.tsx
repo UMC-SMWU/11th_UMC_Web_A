@@ -1,6 +1,8 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, type SubmitEvent } from "react";
-import { movies } from "../../data/movies";
+import { useEffect, useState, type SubmitEvent } from "react";
+import { searchMovies } from "../../api/movies/search-movies";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import { BookmarkButton } from "../../components/bookmark-button";
 
 export function SearchPage() {
@@ -9,20 +11,48 @@ export function SearchPage() {
   const [searchText, setSearchText] = useState(query ?? "");
   const [prevQuery, setPrevQuery] = useState(query);
 
-  // query가 바뀐 경우에만 입력값을 맞춰줌
   if (query !== prevQuery) {
     setPrevQuery(query);
     setSearchText(query ?? "");
   }
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const searchResults = normalizedQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  const normalizedQuery = query?.trim() ?? "";
+
+  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
+  // 처음 들어왔을 때 검색어가 있으면 바로 로딩 상태로 시작
+  const [isLoading, setIsLoading] = useState(normalizedQuery !== "");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // 검색어가 바뀐 순간 바로 초기화
+  const [prevNormalizedQuery, setPrevNormalizedQuery] = useState(normalizedQuery);
+  if (normalizedQuery !== prevNormalizedQuery) {
+    setPrevNormalizedQuery(normalizedQuery);
+    setMovies([]);
+    setErrorMessage(null);
+    setIsLoading(normalizedQuery !== "");
+  }
+
+  // Effect는 이제 요청 보내고, 응답 오면 저장만 함
+  useEffect(() => {
+    if (!normalizedQuery) return;
+
+    let ignore = false;
+
+    searchMovies({ query: normalizedQuery })
+      .then((response) => {
+        if (!ignore) setMovies(response.results);
+      })
+      .catch(() => {
+        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [normalizedQuery]);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,27 +88,39 @@ export function SearchPage() {
         <section className="flex flex-col gap-4">
           <div className="flex items-baseline gap-2">
             <h2 className="text-lg font-extrabold text-ink">‘{query}’ 검색 결과</h2>
-            <p className="text-sm text-sub">영화 {searchResults.length}편</p>
+            {!isLoading && !errorMessage && (
+              <p className="text-sm text-sub">영화 {movies.length}편</p>
+            )}
           </div>
-
-          {searchResults.length === 0 ? (
+          
+          {isLoading ? (
+            <p className="text-sm text-sub">검색 결과를 불러오는 중이에요.</p>
+          ) : errorMessage ? (
+            <p className="text-sm text-sub">{errorMessage}</p>
+          ) : movies.length === 0 ? (
             <p className="text-sm text-sub">검색 결과가 없어요.</p>
           ) : (
             <ul className="flex flex-col gap-4">
-              {searchResults.map((movie) => (
+              {movies.map((movie) => (
                 <li
                   key={movie.id}
                   className="flex gap-5 rounded-[10px] bg-white p-4"
                 >
-                  <img
-                    src={movie.posterPath}
-                    alt={`${movie.title} 포스터`}
-                    className="h-[150px] w-[100px] shrink-0 rounded-lg object-cover"
-                  />
+                  {movie.poster_path ? (
+                    <img
+                      src={getTmdbPosterUrl(movie.poster_path) ?? ""}
+                      alt={`${movie.title} 포스터`}
+                      className="h-[150px] w-[100px] shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[150px] w-[100px] shrink-0 items-center justify-center rounded-lg bg-canvas text-xs text-sub">
+                      이미지 없음
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1">
                     <h3 className="text-base font-extrabold text-ink">{movie.title}</h3>
-                    <p className="text-sm text-sub">{movie.originalTitle}</p>
-                    <p className="text-xs text-muted">{movie.releaseDate}</p>
+                    <p className="text-sm text-sub">{movie.original_title}</p>
+                    <p className="text-xs text-muted">{movie.release_date}</p>
                     <p className="mt-2 line-clamp-2 text-sm text-sub">{movie.overview}</p>
                     <Link
                       to="/movies/$movieId"
