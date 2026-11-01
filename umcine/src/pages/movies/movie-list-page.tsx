@@ -1,62 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getMovies } from "../../api/movies/get-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 import { MovieGrid } from "../../components/movies/movie-grid";
 import { Pagination } from "../../components/movies/pagination";
 
-const PAGE_SIZE = 10;
+// TMDB는 500페이지까지만 요청할 수 있어요.
+const MAX_PAGE = 500;
 
 export function MovieListPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const moviesQuery = useQuery({
+    queryKey: ["movies", "list", { page: currentPage }],
+    queryFn: () => getMovies({ page: currentPage }),
+  });
 
-  useEffect(() => {
-    let ignore = false;
-    async function loadMovies() {
-      setIsLoading(true);
-      setErrorMessage(null);
+  const movies = moviesQuery.data?.results ?? [];
+  const totalPages = Math.min(moviesQuery.data?.total_pages ?? 0, MAX_PAGE);
 
-      try {
-        const response = await getMovies({ page: 1 });
-        if (!ignore) setMovies(response.results);
-      } catch {
-        if (!ignore) setErrorMessage("영화 목록을 불러오지 못했어요.");
-      } finally {
-        if (!ignore) setIsLoading(false);
-      }
-    }
-
-    loadMovies();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const totalPages = Math.max(1, Math.ceil(movies.length / PAGE_SIZE));
-  const pagedMovies = movies.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
+  const handlePageChange = (nextPage: number) => {
+    setCurrentPage(nextPage);
+  };
 
   return (
     <main className="mx-auto flex max-w-[1280px] flex-col gap-10 px-20 py-10">
-      {isLoading ? (
+      {moviesQuery.isPending ? (
         <p>영화 목록을 불러오는 중이에요.</p>
-      ) : errorMessage ? (
-        <p>{errorMessage}</p>
+      ) : moviesQuery.isError ? (
+        <p>영화 목록을 불러오지 못했어요.</p>
       ) : movies.length === 0 ? (
         <p>조건에 맞는 영화가 없어요.</p>
       ) : (
         <>
-          <MovieGrid movies={pagedMovies} />
+          <MovieGrid movies={movies} />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onChangePage={setCurrentPage}
+            onChangePage={handlePageChange}
           />
         </>
       )}
