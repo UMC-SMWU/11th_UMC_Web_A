@@ -27,7 +27,7 @@ interface TmdbGenre {
 }
 
 interface TmdbMovieDetail extends TmdbMovie {
-  genre: TmdbGenre[];
+  genres: TmdbGenre[];
   runtime: number | null;
   tagline: string;
 }
