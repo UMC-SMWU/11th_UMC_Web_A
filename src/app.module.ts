@@ -13,6 +13,9 @@ import { RentalController } from './rentals/rental.controller.js';
 import { RentalService } from './rentals/rental.service.js';
 import { RentalRepository } from './rentals/rental.repository.js';
 
+import { MembersModule } from './members/members.module.js';
+import { RatingsModule } from './ratings/ratings.module.js';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,6 +41,8 @@ import { RentalRepository } from './rentals/rental.repository.js';
 
     // Book 관련 기능
     BooksModule,
+    MembersModule,
+    RatingsModule,
   ],
 
   controllers: [
