@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import type { TmdbMovieDetail } from "../../api/movies/models";
 import { getMovieDetailErrorMessage } from "../../api/movies/get-movie-detail-error-message";
 import { cn } from "../../utils/cn";
 import { useBookmarkStore } from "../../stores/bookmark-store";
@@ -11,64 +11,22 @@ export function MovieDetailPage() {
   const [hoverRating, setHoverRating] = useState(0);
 
   const { movieId } = useParams({ from: "/movies/$movieId" });
+
   const parsedMovieId = Number(movieId);
 
   const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
 
-  const [detailResult, setDetailResult] = useState<{
-    movieId: number;
-    movie: TmdbMovieDetail | null;
-    errorMessage: string | null;
-  } | null>(null);
-
-  const isLoading = isValidMovieId && detailResult?.movieId !== parsedMovieId;
-
-  const movie =
-    isValidMovieId && detailResult?.movieId === parsedMovieId
-      ? detailResult.movie
-      : null;
-
-  const errorMessage = !isValidMovieId
-    ? "올바르지 않은 영화 번호예요."
-    : detailResult?.movieId === parsedMovieId
-      ? detailResult.errorMessage
-      : null;
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", parsedMovieId],
+    queryFn: () => getMovieDetail(parsedMovieId),
+    enabled: isValidMovieId,
+  });
 
   const isBookmarked = useBookmarkStore((state) =>
     state.bookmarkedMovieIds.includes(parsedMovieId),
   );
 
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
-
-  useEffect(() => {
-    if (!isValidMovieId) return;
-
-    let ignore = false;
-
-    getMovieDetail(parsedMovieId)
-      .then((response) => {
-        if (!ignore) {
-          setDetailResult({
-            movieId: parsedMovieId,
-            movie: response,
-            errorMessage: null,
-          });
-        }
-      })
-      .catch((error: unknown) => {
-        if (!ignore) {
-          setDetailResult({
-            movieId: parsedMovieId,
-            movie: null,
-            errorMessage: getMovieDetailErrorMessage(error),
-          });
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [parsedMovieId, isValidMovieId]);
 
   if (!isValidMovieId) {
     return (
@@ -78,7 +36,7 @@ export function MovieDetailPage() {
     );
   }
 
-  if (isLoading) {
+  if (movieDetailQuery.isPending) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center text-lg text-gray-500">
         영화 정보를 불러오는 중...
@@ -86,13 +44,15 @@ export function MovieDetailPage() {
     );
   }
 
-  if (errorMessage) {
+  if (movieDetailQuery.isError) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center text-lg text-gray-500">
-        {errorMessage}
+        {getMovieDetailErrorMessage(movieDetailQuery.error)}
       </main>
     );
   }
+
+  const movie = movieDetailQuery.data;
 
   if (!movie) {
     return (
