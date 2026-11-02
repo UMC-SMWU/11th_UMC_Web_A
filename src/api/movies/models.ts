@@ -17,7 +17,7 @@ interface TmdbMovieListItem extends TmdbMovie {
 interface TmdbMovieListResponse {
   page: number;
   results: TmdbMovieListItem[];
-  totla_page: number;
+  total_pages: number;
   total_results: number;
 }
 
