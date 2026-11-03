@@ -1,4 +1,3 @@
-// src/main/java/com/umc/movie/controller/MemberController.java
 package com.umc.movie.controller;
 
 import com.umc.movie.dto.ApiResponse;
@@ -10,17 +9,14 @@ import com.umc.movie.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/members")
 public class MemberController {
+
     private final MemberService memberService;
 
     @GetMapping("/nickname/{nickname}")
@@ -34,7 +30,7 @@ public class MemberController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<MemberResponse>> signUp(
+    public ResponseEntity<ApiResponse<?>> signUp(
             @Valid @RequestBody SignUpRequest request
     ) {
         try {
@@ -45,14 +41,13 @@ public class MemberController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(409)
-                    .body(new ApiResponse<>(409, e.getMessage(), null));
+                    .body(ApiResponse.failure("MEMBER409", e.getMessage()));
 
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(409)
-                    .body(new ApiResponse<>(
-                            409,
-                            "이미 사용 중인 이메일 또는 닉네임입니다.",
-                            null
+                    .body(ApiResponse.failure(
+                            "MEMBER409",
+                            "이미 사용 중인 이메일 또는 닉네임입니다."
                     ));
         }
     }
