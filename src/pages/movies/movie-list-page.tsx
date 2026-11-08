@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getMovies } from "../../api/movies/get-movies";
 import MovieGrid from "../../components/movies/movie-grid";
 import Pagination from "../../components/movies/pagination";
@@ -13,6 +13,7 @@ export default function MovieListPage() {
   const moviesQuery = useQuery({
     queryKey: ["movies", "list", { page }],
     queryFn: () => getMovies({ page }),
+    placeholderData: keepPreviousData,
   });
 
   const movies = moviesQuery.data?.results ?? [];
