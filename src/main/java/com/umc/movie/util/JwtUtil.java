@@ -16,21 +16,20 @@ import java.util.Date;
 public class JwtUtil {
 
     private final SecretKey key;
-    private final long expirationMs;
+    private final long accessExpirationMs;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-                   @Value("${jwt.expiration-ms}") long expirationMs) {
+                   @Value("${jwt.access-expiration}") long accessExpirationSeconds) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = expirationMs;
+        this.accessExpirationMs = accessExpirationSeconds * 1000;   // 초 → 밀리초
     }
 
-    // 로그인 성공 시 토큰 발급
     public String createToken(Long memberId) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(String.valueOf(memberId))
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + expirationMs))
+                .expiration(new Date(now.getTime() + accessExpirationMs))
                 .signWith(key)
                 .compact();
     }
