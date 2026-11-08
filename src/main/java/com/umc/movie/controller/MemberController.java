@@ -24,8 +24,8 @@ public class MemberController {
         return memberService.checkNickname(nickname);
     }
 
-    @GetMapping("/email")
-    public EmailCheckResponse checkEmail(@RequestParam String email) {
+    @GetMapping("/email/{email}")
+    public EmailCheckResponse checkEmail(@PathVariable String email) {
         return memberService.checkEmail(email);
     }
 
