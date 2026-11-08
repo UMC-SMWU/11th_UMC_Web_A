@@ -29,6 +29,16 @@ export function SearchPage() {
     queryKey: ["movies", "search", { query: normalizedQuery, page }],
     queryFn: () => searchMovies({ query: normalizedQuery, page }),
     enabled: normalizedQuery.length > 0, // 빈 검색어는 요청하지 않음
+    placeholderData: (previousData, previousQuery) => {
+      const previousParams = previousQuery?.queryKey[2];
+
+      return typeof previousParams === "object" &&
+        previousParams !== null &&
+        "query" in previousParams &&
+        previousParams.query === normalizedQuery
+        ? previousData
+        : undefined;
+    },
   });
 
   const movies = searchQuery.data?.results ?? [];
@@ -50,21 +60,21 @@ export function SearchPage() {
   const searchBar = (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full max-w-xl items-center gap-2 rounded-xl border-2 border-[#111111] bg-white px-5 py-3"
+      className='flex w-full max-w-xl items-center gap-2 rounded-xl border-2 border-[#111111] bg-white px-5 py-3'
     >
-      <span aria-hidden="true" className="text-[#999999]">
+      <span aria-hidden='true' className='text-[#999999]'>
         🔍
       </span>
       <input
-        aria-label="검색어"
+        aria-label='검색어'
         value={searchText}
         onChange={(event) => setSearchText(event.target.value)}
-        placeholder="예: 스파이더맨"
-        className="flex-1 text-sm outline-none placeholder:text-[#bbbbbb]"
+        placeholder='예: 스파이더맨'
+        className='flex-1 text-sm outline-none placeholder:text-[#bbbbbb]'
       />
       <button
-        type="submit"
-        className="rounded-lg bg-[#111111] px-3 py-2 text-xs font-semibold text-white"
+        type='submit'
+        className='rounded-lg bg-[#111111] px-3 py-2 text-xs font-semibold text-white'
       >
         검색
       </button>
@@ -74,8 +84,8 @@ export function SearchPage() {
   // 1. 빈 검색어: 요청하지 않고 안내만 표시
   if (!normalizedQuery) {
     return (
-      <main className="flex min-h-[70vh] flex-col items-center bg-[#f7f7f8] px-10 pt-24">
-        <h1 className="mb-6 text-2xl font-bold text-[#111111]">
+      <main className='flex min-h-[70vh] flex-col items-center bg-[#f7f7f8] px-10 pt-24'>
+        <h1 className='mb-6 text-2xl font-bold text-[#111111]'>
           어떤 영화를 찾고 있나요?
         </h1>
         {searchBar}
@@ -84,68 +94,80 @@ export function SearchPage() {
   }
 
   return (
-    <main className="bg-[#f7f7f8] px-10 pb-[60px] pt-8">
-      <div className="mb-8 flex justify-center">{searchBar}</div>
+    <main className='bg-[#f7f7f8] px-10 pb-[60px] pt-8'>
+      <div className='mb-8 flex justify-center'>{searchBar}</div>
 
-      <h2 className="mb-1 text-lg font-bold text-[#111111]">
+      <h2 className='mb-1 text-lg font-bold text-[#111111]'>
         '{query}' 검색 결과
       </h2>
 
       {/* 2. 로딩 → 3. 오류 → 4. 빈 결과 → 5. 성공 */}
       {searchQuery.isLoading ? (
-        <p className="text-[#999999]">검색 결과를 불러오는 중이에요.</p>
+        <p className='text-[#999999]'>검색 결과를 불러오는 중이에요.</p>
       ) : searchQuery.isError ? (
-        <p className="text-[#999999]">검색 결과를 불러오지 못했어요.</p>
+        <>
+          <p className='text-[#999999]'>검색 결과를 불러오지 못했어요.</p>
+          {page > 1 && (
+            <button
+              type='button'
+              onClick={() =>
+                navigate({ search: (prev) => ({ ...prev, page: 1 }) })
+              }
+            >
+              첫 페이지로
+            </button>
+          )}
+        </>
       ) : searchQuery.isSuccess && movies.length === 0 ? (
-        <p className="text-[#999999]">영화를 찾을 수 없어요.</p>
+        <p className='text-[#999999]'>영화를 찾을 수 없어요.</p>
       ) : (
         <>
-          <p className="mb-6 text-sm text-[#999999]">
+          <p className='mb-6 text-sm text-[#999999]'>
             영화 {totalResults}편 · {page}페이지
           </p>
-          <ul className="flex flex-col gap-6">
+          <ul className='flex flex-col gap-6'>
             {movies.map((movie) => {
               const posterUrl = getTmdbPosterUrl(movie.poster_path);
 
               return (
                 <li
                   key={movie.id}
-                  className="flex gap-5 border-b border-[#eeeeee] pb-6"
+                  className='flex gap-5 border-b border-[#eeeeee] pb-6'
                 >
-                  <div className="relative shrink-0">
+                  <div className='relative shrink-0'>
                     {posterUrl ? (
                       <img
                         src={posterUrl}
                         alt={`${movie.title} 포스터`}
-                        className="h-36 w-24 rounded-lg object-cover"
+                        className='h-36 w-24 rounded-lg object-cover'
                       />
                     ) : (
-                      <div className="flex h-36 w-24 items-center justify-center rounded-lg bg-[#e5e5e5] text-xs text-[#999999]">
+                      <div className='flex h-36 w-24 items-center justify-center rounded-lg bg-[#e5e5e5] text-xs text-[#999999]'>
                         이미지 없음
                       </div>
                     )}
                     <BookmarkButton
                       movieId={movie.id}
-                      className="absolute right-1.5 top-1.5 h-7 w-7 bg-black/55 text-white"
+                      className='absolute right-1.5 top-1.5 h-7 w-7 bg-black/55 text-white'
                     />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-base font-semibold text-[#111111]">
+                  <div className='flex-1'>
+                    <h3 className='text-base font-semibold text-[#111111]'>
                       {movie.title}
                     </h3>
-                    <p className="mt-1 text-sm text-[#999999]">
+                    <p className='mt-1 text-sm text-[#999999]'>
                       {movie.original_title}
                     </p>
-                    <p className="mt-1 text-sm text-[#999999]">
+                    <p className='mt-1 text-sm text-[#999999]'>
                       {movie.release_date.replaceAll("-", ".")}
                     </p>
-                    <p className="mt-2 line-clamp-2 text-sm text-[#333333]">
+                    <p className='mt-2 line-clamp-2 text-sm text-[#333333]'>
                       {movie.overview}
                     </p>
                     <Link
-                      to="/movies/$movieId"
+                      to='/movies/$movieId'
                       params={{ movieId: String(movie.id) }}
-                      className="mt-2 inline-block text-sm font-medium text-blue-600 hover:underline"
+                      className='mt-2 inline-block text-sm font-medium text-blue-600 hover:underline'
                     >
                       상세 보기
                     </Link>
