@@ -8,6 +8,6 @@ interface SearchMoviesParams {
 
 export function searchMovies({ query, page = 1 }: SearchMoviesParams) {
   return tmdbClient
-    .get("search/movie", { searchParams: { query, page, language: "ko-KR"} })
+    .get("search/movie", { searchParams: { query, page, language: "ko-KR", include_adult: false} })
     .json<TmdbMovieListResponse>();
 }
