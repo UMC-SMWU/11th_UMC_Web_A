@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import type { TmdbMovieDetail } from "../../api/movies/models";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
@@ -9,12 +8,6 @@ import {
   getTmdbBackdropUrl,
   getTmdbPosterUrl,
 } from "../../utils/movies/tmdb-image";
-
-interface DetailResult {
-  movieId: number;
-  movie: TmdbMovieDetail | null;
-  errorMessage: string | null;
-}
 
 function formatRuntime(runtime: number | null) {
   if (typeof runtime !== "number") return "상영 시간 정보가 없어요.";
@@ -24,55 +17,23 @@ function formatRuntime(runtime: number | null) {
 }
 
 export function MovieDetailPage() {
-  const { movieId } = useParams({ from: "/movies/$movieId" });
-  const parsedMovieId = Number(movieId);
-  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
+  const { movieId: movieIdParam } = useParams({ from: "/movies/$movieId" });
+  const movieId = Number(movieIdParam);
+  const isValidMovieId = Number.isInteger(movieId) && movieId > 0;
 
-  const [result, setResult] = useState<DetailResult | null>(null);
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", movieId],
+    queryFn: () => getMovieDetail(movieId),
+    enabled: isValidMovieId, // 유효한 번호일 때만 요청
+  });
 
   // 훅은 모두 조기 return보다 위에서 호출
   const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(parsedMovieId),
+    state.bookmarkedMovieIds.includes(movieId),
   );
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
-  useEffect(() => {
-    if (!isValidMovieId) return; // 유효하지 않은 ID는 요청하지 않음
-
-    let ignore = false;
-
-    getMovieDetail(parsedMovieId)
-      .then((response) => {
-        if (!ignore) {
-          setResult({
-            movieId: parsedMovieId,
-            movie: response,
-            errorMessage: null,
-          });
-        }
-      })
-      .catch((error) => {
-        if (!ignore) {
-          setResult({
-            movieId: parsedMovieId,
-            movie: null,
-            errorMessage: getMovieDetailErrorMessage(error),
-          });
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [isValidMovieId, parsedMovieId]);
-
-  // 현재 ID의 결과일 때만 사용하고, 로딩은 계산으로 판단
-  const currentResult = result?.movieId === parsedMovieId ? result : null;
-  const isLoading = isValidMovieId && currentResult === null;
-  const movie = currentResult?.movie ?? null;
-  const errorMessage = currentResult?.errorMessage ?? null;
-
-  // 1. 잘못된 영화 번호
+  // 1. 잘못된 영화 번호 (enabled가 false여도 isPending이 true라서 가장 먼저 처리)
   if (!isValidMovieId) {
     return (
       <main className="flex min-h-[50vh] items-center justify-center">
@@ -82,26 +43,27 @@ export function MovieDetailPage() {
   }
 
   // 2. 로딩
-  if (isLoading) {
+  if (movieDetailQuery.isPending) {
     return (
       <main className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-[#999999]">영화 정보를 불러오는 중이에요.</p>
+        <p className="text-[#999999]">영화 상세 정보를 불러오는 중이에요.</p>
       </main>
     );
   }
 
   // 3. 오류 (404면 "영화를 찾을 수 없어요.")
-  if (errorMessage || !movie) {
+  if (movieDetailQuery.isError) {
     return (
       <main className="flex min-h-[50vh] items-center justify-center">
         <p className="text-[#999999]">
-          {errorMessage ?? "영화 정보를 불러오지 못했어요."}
+          {getMovieDetailErrorMessage(movieDetailQuery.error)}
         </p>
       </main>
     );
   }
 
   // 4. 성공
+  const movie = movieDetailQuery.data;
   const backdropUrl = getTmdbBackdropUrl(movie.backdrop_path);
   const posterUrl = getTmdbPosterUrl(movie.poster_path);
 
