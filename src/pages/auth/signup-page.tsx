@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { SubmitEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
+import { checkEmailDuplicate } from "../../api/members/check-email-duplicate";
+import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";
 
 // 이메일 형식 검사
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,6 +18,12 @@ const DEFAULT_FORM = {
   passwordConfirm: "",
 };
 
+const DEFAULT_DUPLICATE_CHECK = {
+  isChecking: false,
+  isAvailable: false,
+};
+
+type DuplicateCheckKey = "email" | "nickname";
 type DefaultFormKey = keyof typeof DEFAULT_FORM;
 type DefaultFormValue = (typeof DEFAULT_FORM)[DefaultFormKey];
 
@@ -50,8 +58,66 @@ export function SignupPage() {
     isPasswordValid &&
     isPasswordConfirmValid;
 
+  const [duplicateCheck, setDuplicateCheck] = useState({
+    email: DEFAULT_DUPLICATE_CHECK,
+    nickname: DEFAULT_DUPLICATE_CHECK,
+  });
+
+  // 입력 조건과 두 중복 확인을 모두 통과해야 제출 가능
+  const canSubmit =
+    isFormValid &&
+    duplicateCheck.email.isAvailable &&
+    duplicateCheck.nickname.isAvailable;
+
   const handleChangeField = (key: DefaultFormKey, value: DefaultFormValue) => {
+    if (key === "email" || key === "nickname") {
+      if (duplicateCheck[key].isChecking) return;
+      // 확인한 값을 바꾸면 다시 중복 확인해야 함
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: DEFAULT_DUPLICATE_CHECK,
+      }));
+    }
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCheckDuplicate = async (key: DuplicateCheckKey) => {
+    const isValid = key === "email" ? isEmailValid : isNicknameValid;
+    if (!isValid || duplicateCheck[key].isChecking) return;
+
+    const label = key === "email" ? "이메일" : "닉네임";
+    setDuplicateCheck((prev) => ({
+      ...prev,
+      [key]: { isChecking: true, isAvailable: false },
+    }));
+
+    try {
+      const response =
+        key === "email"
+          ? await checkEmailDuplicate(form.email.trim())
+          : await checkNicknameDuplicate(form.nickname.trim());
+      const isAvailable = response.available;
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isAvailable },
+      }));
+      alert(
+        isAvailable
+          ? `사용할 수 있는 ${label}이에요.`
+          : `이미 사용 중인 ${label}이에요.`,
+      );
+    } catch {
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isAvailable: false },
+      }));
+      alert("중복 확인에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isChecking: false },
+      }));
+    }
   };
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
@@ -63,22 +129,26 @@ export function SignupPage() {
 
   // noValidate는 폼 제출 시 브라우저의 기본 유효성 검사를 끔
   return (
-    <main className="flex justify-center bg-[#f7f7f8] px-6 pb-24 pt-32">
-      <div className="w-full max-w-md">
-        <h1 className="mb-6 text-4xl font-bold text-[#111111]">회원가입</h1>
+    <main className='flex justify-center bg-[#f7f7f8] px-6 pb-24 pt-32'>
+      <div className='w-full max-w-md'>
+        <h1 className='mb-6 text-4xl font-bold text-[#111111]'>회원가입</h1>
 
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className='flex flex-col gap-4'
+        >
           {/* 이메일 */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className={labelClass}>
+          <div className='flex flex-col gap-2'>
+            <label htmlFor='email' className={labelClass}>
               이메일
             </label>
-            <div className="relative">
+            <div className='relative'>
               <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="name@example.com"
+                id='email'
+                type='email'
+                autoComplete='email'
+                placeholder='name@example.com'
                 value={form.email}
                 onChange={(e) => handleChangeField("email", e.target.value)}
                 aria-invalid={showEmailError}
@@ -88,28 +158,33 @@ export function SignupPage() {
                   showEmailError ? "border-red-500" : "border-[#e5e7eb]",
                 )}
               />
-              <button type="button" className={checkButtonClass}>
-                중복 확인
+              <button
+                type='button'
+                className={checkButtonClass}
+                disabled={!isEmailValid || duplicateCheck.email.isChecking}
+                onClick={() => handleCheckDuplicate("email")}
+              >
+                {duplicateCheck.email.isChecking ? "확인 중" : "중복 확인"}
               </button>
             </div>
             {showEmailError && (
-              <p className="text-xs text-red-500">
+              <p className='text-xs text-red-500'>
                 올바른 이메일 형식이 아니에요.
               </p>
             )}
           </div>
 
           {/* 닉네임 */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="nickname" className={labelClass}>
+          <div className='flex flex-col gap-2'>
+            <label htmlFor='nickname' className={labelClass}>
               닉네임
             </label>
-            <div className="relative">
+            <div className='relative'>
               <input
-                id="nickname"
-                type="text"
-                autoComplete="nickname"
-                placeholder="2–12자"
+                id='nickname'
+                type='text'
+                autoComplete='nickname'
+                placeholder='2–12자'
                 value={form.nickname}
                 onChange={(e) => handleChangeField("nickname", e.target.value)}
                 aria-invalid={showNicknameError}
@@ -119,27 +194,34 @@ export function SignupPage() {
                   showNicknameError ? "border-red-500" : "border-[#e5e7eb]",
                 )}
               />
-              <button type="button" className={checkButtonClass}>
-                중복 확인
+              <button
+                type='button'
+                className={checkButtonClass}
+                disabled={
+                  !isNicknameValid || duplicateCheck.nickname.isChecking
+                }
+                onClick={() => handleCheckDuplicate("nickname")}
+              >
+                {duplicateCheck.nickname.isChecking ? "확인 중" : "중복 확인"}
               </button>
             </div>
             {showNicknameError && (
-              <p className="text-xs text-red-500">
+              <p className='text-xs text-red-500'>
                 닉네임은 2자 이상 12자 이하로 입력해 주세요.
               </p>
             )}
           </div>
 
           {/* 비밀번호 */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className={labelClass}>
+          <div className='flex flex-col gap-2'>
+            <label htmlFor='password' className={labelClass}>
               비밀번호
             </label>
             <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="8자 이상"
+              id='password'
+              type='password'
+              autoComplete='new-password'
+              placeholder='8자 이상'
               value={form.password}
               onChange={(e) => handleChangeField("password", e.target.value)}
               aria-invalid={showPasswordError}
@@ -160,15 +242,15 @@ export function SignupPage() {
           </div>
 
           {/* 비밀번호 확인 */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="passwordConfirm" className={labelClass}>
+          <div className='flex flex-col gap-2'>
+            <label htmlFor='passwordConfirm' className={labelClass}>
               비밀번호 확인
             </label>
             <input
-              id="passwordConfirm"
-              type="password"
-              autoComplete="new-password"
-              placeholder="다시 입력"
+              id='passwordConfirm'
+              type='password'
+              autoComplete='new-password'
+              placeholder='다시 입력'
               value={form.passwordConfirm}
               onChange={(e) =>
                 handleChangeField("passwordConfirm", e.target.value)
@@ -182,22 +264,24 @@ export function SignupPage() {
               )}
             />
             {showPasswordConfirmError && (
-              <p className="text-xs text-red-500">비밀번호가 일치하지 않아요.</p>
+              <p className='text-xs text-red-500'>
+                비밀번호가 일치하지 않아요.
+              </p>
             )}
           </div>
 
           <button
-            type="submit"
-            disabled={!isFormValid}
-            className="mt-2 h-12 w-full cursor-pointer rounded-lg bg-blue-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-blue-300"
+            type='submit'
+            disabled={!canSubmit}
+            className='mt-2 h-12 w-full cursor-pointer rounded-lg bg-blue-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-blue-300'
           >
             가입하기
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[#6b7280]">
+        <p className='mt-6 text-center text-sm text-[#6b7280]'>
           이미 계정이 있나요?{" "}
-          <Link to="/login" className="font-bold text-blue-600">
+          <Link to='/login' className='font-bold text-blue-600'>
             로그인
           </Link>
         </p>
