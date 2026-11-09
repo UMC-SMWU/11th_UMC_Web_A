@@ -35,8 +35,16 @@ public class RentalRepository {
     }
 
     // [선택] 반납 처리: returned_at을 현재 시간으로 갱신. 바뀐 행 수를 돌려준다.
+    // AND returned_at IS NULL: 이미 반납한 기록은 바꾸지 않아서 반납 시간이 덮어써지지 않는다.
     public int updateReturnedAt(Long rentalId) {
-        String sql = "UPDATE rental SET returned_at = NOW() WHERE rental_id = ?";
+        String sql = "UPDATE rental SET returned_at = NOW() WHERE rental_id = ? AND returned_at IS NULL";
         return jdbcTemplate.update(sql, rentalId);
+    }
+
+    // rentalId의 대여 기록이 있는지 확인한다. (바뀐 행이 0일 때 "없음"과 "이미 반납"을 구분하려고 쓴다.)
+    public boolean existsById(Long rentalId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM rental WHERE rental_id = ?", Integer.class, rentalId);
+        return count != null && count > 0;
     }
 }

@@ -23,6 +23,20 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.NOT_FOUND.value(), e.getMessage()));
     }
 
+    // 존재하지 않는 대여 기록 -> 404
+    @ExceptionHandler(RentalNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRentalNotFound(RentalNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+    }
+
+    // 이미 반납한 대여 기록 -> 409
+    @ExceptionHandler(RentalAlreadyReturnedException.class)
+    public ResponseEntity<ErrorResponse> handleRentalAlreadyReturned(RentalAlreadyReturnedException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(HttpStatus.CONFLICT.value(), e.getMessage()));
+    }
+
     // @Valid 검증 실패(빈 제목, categoryId 누락 등) -> 400, 필드별 사유를 담는다.
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
