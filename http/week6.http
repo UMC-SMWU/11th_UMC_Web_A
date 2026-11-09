@@ -1,0 +1,98 @@
+### 1. 회원가입 성공 (201)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "umc@example.com",
+  "password": "Umc!1234",
+  "nickname": "moviefan"
+}
+
+### 2. 검증 실패: 이메일 형식 (400)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "Umc!1234",
+  "nickname": "moviefan2"
+}
+
+### 3. 중복 이메일 (409, MEMBER4091)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "umc@example.com",
+  "password": "Umc!1234",
+  "nickname": "another"
+}
+
+### 4. 중복 닉네임 (409, MEMBER4092)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "other@example.com",
+  "password": "Umc!1234",
+  "nickname": "moviefan"
+}
+
+### 5. 평점 등록 (201) - memberId는 가입 응답의 값으로 바꿔서 사용
+POST http://localhost:8080/members/1/ratings
+Content-Type: application/json
+
+{
+  "movieId": 603,
+  "score": 5,
+  "comment": "인생 영화"
+}
+
+### 6. 같은 영화 중복 평점 (409)
+POST http://localhost:8080/members/1/ratings
+Content-Type: application/json
+
+{
+  "movieId": 603,
+  "score": 4
+}
+
+### 7. 별점 범위 초과 (400)
+POST http://localhost:8080/members/1/ratings
+Content-Type: application/json
+
+{
+  "movieId": 604,
+  "score": 6
+}
+
+### 8. 평점 수정 (200) - ratingId는 등록 응답의 값
+PATCH http://localhost:8080/members/1/ratings/1
+Content-Type: application/json
+
+{
+  "score": 4,
+  "comment": "다시 보니 4점"
+}
+
+### 9. 다른 회원이 수정 (403)
+PATCH http://localhost:8080/members/2/ratings/1
+Content-Type: application/json
+
+{
+  "score": 1
+}
+
+### 10. 존재하지 않는 평점 수정 (404)
+PATCH http://localhost:8080/members/1/ratings/99999
+Content-Type: application/json
+
+{
+  "score": 3
+}
+
+### 11. 평점 삭제 (204)
+DELETE http://localhost:8080/members/1/ratings/1
+
+### 12. 삭제 후 목록 조회
+GET http://localhost:8080/members/1/ratings
