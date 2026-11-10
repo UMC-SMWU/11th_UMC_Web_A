@@ -10,6 +10,8 @@ export default function Header() {
 
   const isSearchPage = pathname === "/search";
 
+  const isMyPage = pathname === "/my" || pathname.startsWith("/my/");
+
   return (
     <header className="flex h-[86px] w-full items-center justify-between bg-white px-20">
       <div className="flex items-center gap-[42px]">
@@ -45,8 +47,11 @@ export default function Header() {
           </Link>
 
           <Link
-            to="/"
-            className="text-[14px] font-bold text-[#606774] no-underline"
+            to="/my"
+            className={cn(
+              "text-[14px] font-bold text-[#606774] no-underline",
+              isMyPage && "border-b-2 border-black text-[#111]",
+            )}
           >
             내 정보
           </Link>
