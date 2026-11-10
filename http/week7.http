@@ -1,0 +1,162 @@
+### 0. 준비: 회원 A 가입 (201)  ※ 이미 가입했다면 409가 나와도 괜찮다
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "a@umc.com",
+  "password": "Umc1234!",
+  "nickname": "영화광A"
+}
+
+### 0. 준비: 회원 B 가입 (201)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "b@umc.com",
+  "password": "Umc1234!",
+  "nickname": "영화광B"
+}
+
+### 1-1. A 로그인 (200) - accessToken을 tokenA에 자동 저장
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@umc.com",
+  "password": "Umc1234!"
+}
+
+> {% client.global.set("tokenA", response.body.result.accessToken); %}
+
+### 1-2. B 로그인 (200) - accessToken을 tokenB에 자동 저장
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "b@umc.com",
+  "password": "Umc1234!"
+}
+
+> {% client.global.set("tokenB", response.body.result.accessToken); %}
+
+### 1-3. 없는 이메일 (401, AUTH401_1)
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@umc.com",
+  "password": "Umc1234!"
+}
+
+### 1-4. 틀린 비밀번호 (401, AUTH401_1) - 1-3과 같은 응답이어야 한다
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@umc.com",
+  "password": "Wrong1234!"
+}
+
+### 2-1. 토큰 없이 내 정보 조회 (401, AUTH401_2)
+GET http://localhost:8080/members/me
+
+### 2-2. A 토큰으로 내 정보 조회 (200)
+GET http://localhost:8080/members/me
+Authorization: Bearer {{tokenA}}
+
+### 2-3. 토큰 payload를 한 글자 바꿔서 조회 (401, AUTH401_3)
+### 아래 토큰의 "가운데 부분" 글자 하나를 다른 글자로 교체해서 사용한다 (직접 복사해서 수정)
+GET http://localhost:8080/members/me
+Authorization: Bearer {{tokenA}}
+
+### 3-1. 내 닉네임 수정 (200)
+PATCH http://localhost:8080/members/me
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "nickname": "영화광A2"
+}
+
+### 3-2. 다른 회원(B)이 쓰는 닉네임으로 수정 (409, MEMBER409_1)
+PATCH http://localhost:8080/members/me
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "nickname": "영화광B"
+}
+
+### 3-3. 내가 지금 쓰는 닉네임 그대로 수정 (200, 중복으로 보지 않는다)
+PATCH http://localhost:8080/members/me
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "nickname": "영화광A2"
+}
+
+### 4-1. A 토큰으로 평점 등록 (201, COMMON201) - 바디에 memberId가 없다
+POST http://localhost:8080/ratings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 603,
+  "score": 5,
+  "comment": "인생 영화"
+}
+
+> {% client.global.set("ratingId", response.body.result.ratingId); %}
+
+### 4-2. 같은 영화 중복 등록 (409, RATING409_1)
+POST http://localhost:8080/ratings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 603,
+  "score": 4,
+  "comment": "한 번 더"
+}
+
+### 5. A 토큰으로 본인 평점 수정 (200)
+PATCH http://localhost:8080/ratings/{{ratingId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "score": 4,
+  "comment": "다시 봐도 좋다"
+}
+
+### 6. B 토큰으로 A의 평점 수정 시도 (403, RATING403_1)
+PATCH http://localhost:8080/ratings/{{ratingId}}
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "score": 1,
+  "comment": "남의 평점"
+}
+
+### 7. 토큰 없이 평점 수정 (401, AUTH401_2) - 6번과 code가 달라야 한다
+PATCH http://localhost:8080/ratings/{{ratingId}}
+Content-Type: application/json
+
+{
+  "score": 1,
+  "comment": "토큰 없음"
+}
+
+### 8. 없는 평점 삭제 (404, RATING404_1)
+DELETE http://localhost:8080/ratings/99999
+Authorization: Bearer {{tokenA}}
+
+### 9. 본인 평점 삭제 (200, COMMON200, result null)
+DELETE http://localhost:8080/ratings/{{ratingId}}
+Authorization: Bearer {{tokenA}}
+
+### 참고: 공개 API - 토큰 없이도 조회된다 (200)
+GET http://localhost:8080/members/1/ratings
