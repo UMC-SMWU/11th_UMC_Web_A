@@ -9,4 +9,6 @@ if (!tmdbApiBaseUrl || !tmdbAccessToken) {
 export const env = {
   tmdbApiBaseUrl,
   tmdbAccessToken,
+  // 우리 서버 주소예요. .env.local의 VITE_API_BASE_URL로 설정해요.
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "",
 };

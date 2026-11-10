@@ -8,6 +8,7 @@ export function Header() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isMovieActive = pathname === "/" || pathname.startsWith("/movies");
   const isSearchActive = pathname.startsWith("/search");
+  const isMyActive = pathname.startsWith("/me");
 
   return (
     <header className="flex h-[91px] w-full items-center justify-between border-b border-line bg-white px-4 py-6 md:px-20">
@@ -31,8 +32,13 @@ export function Header() {
           >
             검색
           </Link>
-          {/* 내 정보 화면은 아직 라우트가 없어서 링크 없이 표시만 해요. */}
-          <span className={navItemClass}>내 정보</span>
+          <Link
+            to="/me"
+            aria-current={isMyActive ? "page" : undefined}
+            className={cn(navItemClass, isMyActive && navItemActiveClass)}
+          >
+            내 정보
+          </Link>
         </nav>
       </div>
 
@@ -44,12 +50,12 @@ export function Header() {
         >
           <img className="size-5" src="/icons/search.svg" alt="" />
         </Link>
-        <button
-          type="button"
-          className="h-10 cursor-pointer rounded-lg bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover"
+        <Link
+          to="/login"
+          className="flex h-10 items-center rounded-lg bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover"
         >
           로그인
-        </button>
+        </Link>
       </div>
     </header>
   );
