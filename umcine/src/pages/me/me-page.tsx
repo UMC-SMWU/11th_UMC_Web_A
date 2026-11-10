@@ -40,8 +40,8 @@ export function MePage() {
     })),
   });
 
-  const isPending = movieQueries.some((query) => query.isPending);
-  const isError = movieQueries.some((query) => query.isError);
+  // 실패한 영화는 개수만 안내하고, 불러온 영화는 그대로 보여줌
+  const failedCount = movieQueries.filter((query) => query.isError).length;
 
   // MovieCard가 목록 응답 형태를 받으므로 상세 응답을 맞춰서 전달
   const movies: TmdbMovieListItem[] = movieQueries.flatMap((query) =>
@@ -49,6 +49,10 @@ export function MePage() {
       ? [{ ...query.data, genre_ids: query.data.genres.map((genre) => genre.id) }]
       : [],
   );
+
+  // 아직 한 편도 불러오지 못했을 때만 로딩 문구 표시
+const isPending =
+  movies.length === 0 && movieQueries.some((query) => query.isPending);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-20 pt-6 pb-16">
@@ -98,10 +102,13 @@ export function MePage() {
           <p className="text-sm text-sub">즐겨찾기한 영화가 없어요.</p>
         ) : isPending ? (
           <p className="text-sm text-sub">즐겨찾기한 영화를 불러오는 중이에요.</p>
-        ) : isError ? (
-          <p className="text-sm text-sub">즐겨찾기한 영화를 불러오지 못했어요.</p>
         ) : (
           <div className="flex flex-col gap-10">
+            {failedCount > 0 && (
+              <p className="text-sm text-sub">
+                영화 {failedCount}편의 정보를 불러오지 못했어요.
+              </p>
+            )}
             <MovieGrid movies={movies} />
             <Pagination
               currentPage={page}
