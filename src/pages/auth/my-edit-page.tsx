@@ -4,18 +4,14 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export function MyEditPage() {
   const [nickname, setNickname] = useState("gs0428");
-  const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
 
   useEffect(() => {
-    if (!image) return;
+    if (!preview) return;
 
-    const url = URL.createObjectURL(image);
-    setPreview(url);
-
-    return () => URL.revokeObjectURL(url);
-  }, [image]);
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
 
   return (
     <main className="bg-[#f5f6f8] text-[#19191f]">
@@ -58,7 +54,7 @@ export function MyEditPage() {
                   }
 
                   setImageError("");
-                  setImage(file);
+                  setPreview(URL.createObjectURL(file));
                 }}
               />
               <span className="relative grid size-20 place-items-center rounded-full bg-[#E3E6EB] peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500">
