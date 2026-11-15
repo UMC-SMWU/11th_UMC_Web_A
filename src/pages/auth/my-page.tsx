@@ -32,13 +32,12 @@ export function MyPage() {
       <div className="mx-auto max-w-[1200px] px-4 py-6">
         <div className="flex items-center justify-between pb-6">
           <h1 className="text-2xl font-bold tracking-tight">내 정보</h1>
-          <button
-            type="button"
-            disabled
-            className="rounded-md bg-[#485cde] px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
+          <Link
+            to="/my-edit"
+            className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
           >
             정보 수정
-          </button>
+          </Link>
         </div>
 
         <section className="border-y border-[#E3E6EB] py-4">
