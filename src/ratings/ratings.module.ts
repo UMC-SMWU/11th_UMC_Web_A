@@ -6,12 +6,15 @@ import { Rating } from './entities/rating.entity.js';
 
 import { RatingController } from './controller/rating.controller.js';
 import { RatingService } from '../service/rating.service.js';
+import { AuthGuard } from '../guard/auth.guard.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Rating, Member])],
+  imports: [TypeOrmModule.forFeature([Member, Rating])],
 
   controllers: [RatingController],
 
-  providers: [RatingService],
+  providers: [RatingService, AuthGuard],
+
+  exports: [RatingService],
 })
 export class RatingsModule {}
