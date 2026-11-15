@@ -54,11 +54,146 @@ export function SignupPage() {
 
   // noValidate는 폼 제출 시 브라우저의 기본 유효성 검사를 끔
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      {/* UI 구현 */}
-      <button type="submit" disabled={!isFormValid}>
-        가입하기
-      </button>
-    </form>
+    <main className="grid min-h-[calc(100dvh-64px)] place-items-center bg-[#f5f6f8] px-5 py-10">
+      <section className="w-full max-w-sm">
+        <h1 className="mb-5 text-3xl font-bold tracking-tight text-gray-900">
+          회원가입
+        </h1>
+
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              이메일
+            </label>
+            <div className="flex h-11 items-center gap-2 rounded-lg border border-[#E3E6EB] bg-white px-3 focus-within:border-indigo-500">
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={(e) => handleChangeField("email", e.target.value)}
+                className="min-w-0 flex-1 text-sm outline-none text-[#969DA8]"
+              />
+              <button
+                type="button"
+                disabled
+                className="shrink-0 text-xs font-semibold text-[#2563EB]"
+              >
+                중복 확인
+              </button>
+            </div>
+            {showEmailError && (
+              <p className="mt-1 text-xs text-red-600">
+                이메일 형식을 확인해 주세요.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="nickname"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              닉네임
+            </label>
+            <div className="flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 focus-within:border-indigo-500">
+              <input
+                id="nickname"
+                type="text"
+                placeholder="2~12자"
+                value={form.nickname}
+                onChange={(e) => handleChangeField("nickname", e.target.value)}
+                className="min-w-0 flex-1 text-sm text-[#969DA8] outline-none"
+              />
+              <button
+                type="button"
+                disabled
+                className="shrink-0 text-xs font-semibold text-[#2563EB]"
+              >
+                중복 확인
+              </button>
+            </div>
+            {showNicknameError && (
+              <p className="mt-1 text-xs text-red-600">
+                닉네임은 2-12자로 입력해 주세요.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              비밀번호
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="8자 이상"
+              value={form.password}
+              onChange={(e) => handleChangeField("password", e.target.value)}
+              className="h-11 w-full rounded-lg border border-[#E3E6EB] bg-white px-3 text-sm text-[#969DA8] outline-none focus:border-indigo-500"
+            />
+            <p className="mt-1 text-xs text-[#969DA8]">
+              영문 대소문자, 숫자, 특수문자를 모두 포함해 8자 이상 입력해주세요.
+            </p>
+            {showPasswordError && (
+              <p className="mt-1 text-xs text-[#EF4444]">
+                비밀번호를 다시 한번 확인해주세요.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="passwordConfirm"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              비밀번호 확인
+            </label>
+            <input
+              id="passwordConfirm"
+              type="password"
+              autoComplete="new-password"
+              placeholder="다시 입력"
+              value={form.passwordConfirm}
+              onChange={(e) =>
+                handleChangeField("passwordConfirm", e.target.value)
+              }
+              className="h-11 w-full rounded-lg border border-[#E3E6EB] bg-white px-3 text-sm text-[#969DA8] outline-none focus:border-indigo-500"
+            />
+            {showPasswordConfirmError && (
+              <p className="mt-1 text-xs text-red-600">
+                비밀번호가 일치하지 않아요.
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={!isFormValid}
+            className="h-11 w-full rounded-lg bg-[#485cde] text-sm font-semibold text-white enabled:hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            가입하기
+          </button>
+        </form>
+
+        <p className="mt-4 text-center text-xs text-[#606774]">
+          이미 계정이 있나요?{" "}
+          <a
+            href="/login"
+            className="font-semibold text-[#2563EB] hover:underline"
+          >
+            로그인
+          </a>
+        </p>
+      </section>
+    </main>
   );
 }
