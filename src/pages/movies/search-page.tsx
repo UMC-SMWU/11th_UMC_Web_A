@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/serach-movie";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 
 export function SearchPage() {
   const { query = "" } = useSearch({ from: "/search" });
@@ -9,22 +9,15 @@ export function SearchPage() {
 
   const [searchText, setSearchText] = useState(query);
 
-  const [searchResult, setSearchResult] = useState<{
-    query: string;
-    movies: TmdbMovieListItem[];
-    errorMessage: string | null;
-  } | null>(null);
-
   const normalizedQuery = query.trim();
 
-  const isLoading =
-    normalizedQuery !== "" && searchResult?.query !== normalizedQuery;
+  const searchQuery = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery }],
+    queryFn: () => searchMovies({ query: normalizedQuery }),
+    enabled: normalizedQuery.length > 0,
+  });
 
-  const movies =
-    searchResult?.query === normalizedQuery ? searchResult.movies : [];
-
-  const errorMessage =
-    searchResult?.query === normalizedQuery ? searchResult.errorMessage : null;
+  const movies = searchQuery.data?.results ?? [];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,36 +33,6 @@ export function SearchPage() {
     setSearchText("");
     navigate({ search: {} });
   }
-
-  useEffect(() => {
-    if (!normalizedQuery) return;
-
-    let ignore = false;
-
-    searchMovies({ query: normalizedQuery })
-      .then((response) => {
-        if (!ignore) {
-          setSearchResult({
-            query: normalizedQuery,
-            movies: response.results,
-            errorMessage: null,
-          });
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setSearchResult({
-            query: normalizedQuery,
-            movies: [],
-            errorMessage: "검색 결과를 불러오지 못했어요.",
-          });
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [normalizedQuery]);
 
   return (
     <main className="min-h-screen bg-[#F6F7F9] px-6 text-gray-900">
@@ -158,13 +121,13 @@ export function SearchPage() {
               </span>
             </div>
 
-            {isLoading ? (
+            {searchQuery.isLoading ? (
               <div className="py-20 text-center text-sm text-gray-500">
                 검색 결과를 불러오는 중...
               </div>
-            ) : errorMessage ? (
+            ) : searchQuery.isError ? (
               <div className="py-20 text-center text-sm text-red-500">
-                {errorMessage}
+                검색 결과를 불러오지 못했어요.
               </div>
             ) : movies.length === 0 ? (
               <div className="py-20 text-center text-sm text-gray-500">
