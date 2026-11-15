@@ -20,6 +20,7 @@ export function MovieDetailPage() {
     queryKey: ["movies", "detail", parsedMovieId],
     queryFn: () => getMovieDetail(parsedMovieId),
     enabled: isValidMovieId,
+    staleTime: 30 * 1000,
   });
 
   const isBookmarked = useBookmarkStore((state) =>
