@@ -289,7 +289,7 @@ export function SignupPage() {
 
           <button
             type='submit'
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
             className='mt-2 h-12 w-full cursor-pointer rounded-lg bg-blue-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-blue-300'
           >
             {isSubmitting ? "가입 중" : "가입하기"}
