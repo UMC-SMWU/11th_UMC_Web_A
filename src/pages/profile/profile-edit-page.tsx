@@ -28,7 +28,10 @@ export function ProfileEditPage() {
       e.target.value = "";
       return;
     }
-    setImageUrl(URL.createObjectURL(file)); // 미리보기
+    setImageUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file); // 미리보기
+    });
   };
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
