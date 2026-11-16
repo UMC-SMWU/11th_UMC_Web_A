@@ -35,6 +35,14 @@ function Header() {
             >
               검색
             </Link>
+
+            <Link
+              to="/my"
+              className="text-base font-medium text-black underline-offset-2"
+              activeProps={{ className: "underline" }}
+            >
+              내 정보
+            </Link>
           </nav>
         </div>
 
