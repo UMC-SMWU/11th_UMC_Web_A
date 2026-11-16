@@ -1,5 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
 
 export default function Header() {
   const pathname = useRouterState({
@@ -11,6 +14,15 @@ export default function Header() {
   const isSearchPage = pathname === "/search";
 
   const isMyPage = pathname === "/my" || pathname.startsWith("/my/");
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
   return (
     <header className="flex h-[86px] w-full items-center justify-between bg-white px-20">
@@ -66,12 +78,23 @@ export default function Header() {
           <img src="/icons/search.svg" alt="검색" className="h-6 w-6" />
         </button>
 
-        <button
-          type="button"
-          className="h-10 rounded-lg bg-[#4F6DF5] px-4 font-semibold text-white"
-        >
-          로그인
-        </button>
+        {!accessToken ? (
+          <Link
+            to="/login"
+            className="flex h-10 items-center rounded-lg bg-[#4F6DF5] px-4 font-semibold text-white"
+          >
+            로그인
+          </Link>
+        ) : meQuery.isLoading ? (
+          <span className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
+        ) : (
+          <Link
+            to="/my"
+            className="flex h-10 items-center rounded-lg bg-[#4F6DF5] px-4 font-semibold text-white"
+          >
+            마이페이지
+          </Link>
+        )}
       </div>
     </header>
   );

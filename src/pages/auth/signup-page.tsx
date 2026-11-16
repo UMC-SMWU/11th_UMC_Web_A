@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { checkEmailDuplicate } from "../../api/members/check-email-duplicate";
 import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";
-import { signup } from "../../api/members/signup";
+import { useSignupMutation } from "../../hook/use-signup-mutation";
 
 // 이메일 형식 검사
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,7 +31,7 @@ export function SignupPage() {
   // 입력값 상태 관리
   const [form, setForm] = useState(DEFAULT_FORM);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const signupMutation = useSignupMutation();
 
   // 이메일, 닉네임 중복 확인 상태 관리
   const [duplicateCheck, setDuplicateCheck] = useState({
@@ -139,27 +139,16 @@ export function SignupPage() {
   };
 
   // 회원가입 제출
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!canSubmit || isSubmitting) return;
+    if (!canSubmit || signupMutation.isPending) return;
 
-    setIsSubmitting(true);
-
-    try {
-      const response = await signup({
-        email: form.email.trim(),
-        nickname: form.nickname.trim(),
-        password: form.password,
-      });
-
-      alert(response.message);
-    } catch (error) {
-      console.error("회원가입 실패:", error);
-      alert("회원가입에 실패했어요. 다시 시도해 주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    signupMutation.mutate({
+      email: form.email.trim(),
+      nickname: form.nickname.trim(),
+      password: form.password,
+    });
   };
 
   return (
@@ -317,10 +306,10 @@ export function SignupPage() {
           {/* 가입하기 버튼 */}
           <button
             type="submit"
-            disabled={!canSubmit || isSubmitting}
+            disabled={!canSubmit || signupMutation.isPending}
             className="mt-1 h-12 w-full rounded-md bg-indigo-600 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "가입 중" : "가입하기"}
+            {signupMutation.isPending ? "가입 중" : "가입하기"}
           </button>
         </form>
 
