@@ -35,8 +35,6 @@ function Header() {
             >
               검색
             </Link>
-
-            {/* <Link to="/search">내 정보</Link> */}
           </nav>
         </div>
 
@@ -49,12 +47,12 @@ function Header() {
             <img src="/icons/search.svg" alt="검색" className="h-5 w-5" />
           </Link>
 
-          <button
-            type="button"
-            className="h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-lg border-none bg-[#2563eb] px-3 text-sm font-medium text-white sm:px-5"
+          <Link
+            to="/login"
+            className="inline-flex h-10 shrink-0 items-center rounded-lg bg-[#2563EB] px-3 text-sm font-medium text-white sm:px-5"
           >
             로그인
-          </button>
+          </Link>
         </div>
       </div>
     </header>

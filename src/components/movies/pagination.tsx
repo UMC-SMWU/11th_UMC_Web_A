@@ -21,7 +21,7 @@ export default function Pagination({
     (_, index) => startPage + index,
   );
 
-  if (totalPages <= 1) return null;
+  if (totalPages === 0) return null;
 
   return (
     <nav
