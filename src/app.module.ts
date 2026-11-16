@@ -22,30 +22,30 @@ import { RentalRepository } from './rentals/rental.repository.js';
 import { MembersModule } from './members/members.module.js';
 import { RatingsModule } from './ratings/ratings.module.js';
 
+// 8주차 추가
+import { FavoritesModule } from './favorites/favorites.module.js';
+import { MovieRecordsModule } from './movie-records/movie-records.module.js';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
 
-    // TypeORM으로 MySQL 연결
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-
         host: configService.getOrThrow<string>('DB_HOST'),
         port: 3306,
         username: configService.getOrThrow<string>('DB_USER'),
         password: configService.getOrThrow<string>('DB_PASSWORD'),
         database: configService.getOrThrow<string>('DB_NAME'),
-
         autoLoadEntities: true,
         synchronize: false,
       }),
     }),
 
-    // JWT 설정
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -61,10 +61,13 @@ import { RatingsModule } from './ratings/ratings.module.js';
 
     TypeOrmModule.forFeature([Member]),
 
-    // 기존 기능 모듈
     BooksModule,
     MembersModule,
     RatingsModule,
+
+    // 8주차 추가
+    FavoritesModule,
+    MovieRecordsModule,
   ],
 
   controllers: [AppController, RentalController, AuthController],
