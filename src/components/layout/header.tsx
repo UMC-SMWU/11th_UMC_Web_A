@@ -67,11 +67,21 @@ function Header() {
           </Link>
 
           {!accessToken ? (
-            <Link to="/login">로그인</Link>
+            <Link
+              to="/login"
+              className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
+            >
+              로그인
+            </Link>
           ) : meQuery.isLoading ? (
             <span className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
           ) : (
-            <Link to="/my">마이페이지</Link>
+            <Link
+              to="/my"
+              className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
+            >
+              마이페이지
+            </Link>
           )}
         </div>
       </div>

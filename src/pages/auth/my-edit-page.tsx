@@ -98,6 +98,7 @@ export function MyEditPage() {
           </div>
           <button
             type="submit"
+            className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
             disabled={!canSubmit || updateMeMutation.isPending}
           >
             {updateMeMutation.isPending ? "저장 중" : "저장"}
