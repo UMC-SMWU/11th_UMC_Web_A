@@ -1,14 +1,159 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getMemberRatings } from "../../api/movies/rating-api";
+import { useRatingMutations } from "../../hook/use-rating-mutations";
+import { BookmarkButton } from "../../components/bookmark-button";
+
+import type { Rating } from "../../types/rating";
+
 import {
   getTmdbPosterUrl,
   getTmdbBackdropUrl,
 } from "../../utils/movies/tndb-image";
+
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+
+// 임시 회원 ID: 추후 로그인한 회원의 실제 ID로 교체해야 함
+const TEMP_MEMBER_ID = 1;
+
+interface RatingEditorProps {
+  movieId: number;
+  savedRating?: Rating;
+}
+
+function RatingEditor({ movieId, savedRating }: RatingEditorProps) {
+  const [rating, setRating] = useState(savedRating?.score ?? 0);
+  const [comment, setComment] = useState(savedRating?.comment ?? "");
+
+  const { createMutation, updateMutation, deleteMutation } =
+    useRatingMutations();
+
+  const isSaving =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
+
+  const mutationError =
+    createMutation.error ?? updateMutation.error ?? deleteMutation.error;
+
+  // 평점 등록 또는 수정
+  const handleSaveRating = () => {
+    if (isSaving) return;
+
+    if (rating === 0) {
+      alert("별점을 선택해 주세요.");
+      return;
+    }
+
+    if (savedRating) {
+      // 기존 평점 수정
+      updateMutation.mutate({
+        ratingId: savedRating.ratingId,
+        score: rating,
+        comment,
+      });
+    } else {
+      // 새로운 평점 등록
+      createMutation.mutate({
+        movieId,
+        score: rating,
+        comment,
+      });
+    }
+  };
+
+  // 평점 삭제
+  const handleDeleteRating = () => {
+    if (!savedRating || isSaving) return;
+
+    const confirmed = window.confirm("등록한 평점을 삭제하시겠습니까?");
+
+    if (!confirmed) return;
+
+    deleteMutation.mutate(savedRating.ratingId);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="text-[21px] font-bold">내 평점</h2>
+
+      <p className="mt-2 text-[12px] text-gray-400">
+        별점은 필수, 후기는 선택이에요.
+      </p>
+
+      <p className="text-sm text-gray-500">
+        {savedRating
+          ? "기존에 저장한 평점을 불러왔어요."
+          : "아직 등록된 평점이 없어요."}
+      </p>
+
+      {/* 별점 선택 */}
+      <div className="mt-3 flex gap-2">
+        {[1, 2, 3, 4, 5].map((score) => (
+          <button
+            key={score}
+            type="button"
+            onClick={() => setRating(score)}
+            disabled={isSaving}
+            aria-label={`${score}점`}
+            aria-pressed={rating === score}
+            className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white"
+          >
+            <img
+              src={
+                score <= rating ? "/icons/star.svg" : "/icons/star-outline.svg"
+              }
+              alt=""
+              className="h-6 w-6"
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* 후기 입력 */}
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        disabled={isSaving}
+        placeholder="영화를 보고 느낀 점을 남겨보세요."
+        className="mt-3 h-[140px] w-full resize-none rounded-lg border border-gray-200 p-4 text-[14px] outline-none"
+      />
+
+      {mutationError && (
+        <p className="text-sm text-red-500">
+          {mutationError instanceof Error
+            ? mutationError.message
+            : "평점 처리 중 오류가 발생했어요."}
+        </p>
+      )}
+
+      {/* 등록 / 수정 버튼 */}
+      <button
+        type="button"
+        onClick={handleSaveRating}
+        disabled={isSaving || rating === 0}
+        className="mt-3 w-full rounded-lg bg-[#19191D] py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isSaving ? "처리 중..." : savedRating ? "평점 수정" : "평점 저장"}
+      </button>
+
+      {/* 기존 평점이 있을 때만 삭제 표시 */}
+      {savedRating && (
+        <button
+          type="button"
+          onClick={handleDeleteRating}
+          disabled={isSaving}
+          className="mt-2 w-full rounded-lg border border-red-300 py-3 font-bold text-red-500 disabled:opacity-50"
+        >
+          평점 삭제
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function MovieDetailPage() {
   const { movieId: movieIdParam } = useParams({
@@ -18,73 +163,26 @@ export function MovieDetailPage() {
   const movieId = Number(movieIdParam);
   const isValidMovieId = Number.isInteger(movieId) && movieId > 0;
 
-  // 1. TMDB 영화 상세 정보 조회 (TanStack Query)
+  // 1. TMDB 영화 상세 조회
   const movieDetailQuery = useQuery({
     queryKey: ["movies", "detail", movieId],
     queryFn: () => getMovieDetail(movieId),
     enabled: isValidMovieId,
   });
 
-  // 2. 평점 관련 상태
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [isRatingLoading, setIsRatingLoading] = useState(true);
-  const [ratingError, setRatingError] = useState<string | null>(null);
-  const [hasSavedRating, setHasSavedRating] = useState(false);
+  // 2. 회원 평점 조회
+  const ratingsQuery = useQuery({
+    queryKey: ["ratings", "member", TEMP_MEMBER_ID],
+    queryFn: () => getMemberRatings(TEMP_MEMBER_ID),
+    enabled: isValidMovieId,
+    retry: false,
+  });
 
-  // 3. NestJS 사용자 평점 조회 (기존 useEffect 유지)
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadRating() {
-      setIsRatingLoading(true);
-      setRatingError(null);
-      setRating(0);
-      setComment("");
-      setHasSavedRating(false);
-
-      try {
-        const ratings = await getMemberRatings(1);
-
-        const currentRating = ratings.find((item) => item.movieId === movieId);
-
-        if (!ignore && currentRating) {
-          setRating(currentRating.score);
-          setComment(currentRating.comment ?? "");
-          setHasSavedRating(true);
-        }
-      } catch (error) {
-        if (!ignore) {
-          setRatingError(
-            error instanceof Error
-              ? error.message
-              : "평점을 불러오지 못했어요.",
-          );
-        }
-      } finally {
-        if (!ignore) {
-          setIsRatingLoading(false);
-        }
-      }
-    }
-
-    if (isValidMovieId) {
-      void loadRating();
-    }
-
-    return () => {
-      ignore = true;
-    };
-  }, [movieId, isValidMovieId]);
-
-  // 4. 즐겨찾기 상태 (Zustand 유지)
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(movieId),
+  // 3. 현재 영화의 평점 찾기
+  const savedRating = ratingsQuery.data?.find(
+    (item) => item.movieId === movieId,
   );
 
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
-
-  // 5. 예외 처리
   if (!isValidMovieId) {
     return <main>올바르지 않은 영화 번호예요.</main>;
   }
@@ -97,7 +195,6 @@ export function MovieDetailPage() {
     return <main>{getMovieDetailErrorMessage(movieDetailQuery.error)}</main>;
   }
 
-  // 영화 상세 데이터
   const movie = movieDetailQuery.data;
 
   return (
@@ -141,7 +238,7 @@ export function MovieDetailPage() {
 
             <p className="mt-3 text-[16px]">{movie.original_title}</p>
 
-            <div className="mt-3 flex items-center gap-2 text-[13px] font-weight">
+            <div className="mt-3 flex items-center gap-2 text-[13px]">
               <span>{movie.release_date}</span>
               <span>{movie.genres.map((genre) => genre.name).join(", ")}</span>
               <span>
@@ -179,88 +276,23 @@ export function MovieDetailPage() {
             {movie.overview}
           </p>
 
-          <button
-            type="button"
-            onClick={() => toggleBookmark(movie.id)}
-            className="mt-5 flex items-center gap-2 rounded-[12px] bg-[#4F64E8] px-[17px] py-[13px] font-bold text-white"
-          >
-            <img
-              src={
-                isBookmarked
-                  ? "/icons/bookmark.svg"
-                  : "/icons/bookmark-outline.svg"
-              }
-              alt=""
-              aria-hidden="true"
-              className="h-[17px] w-[17px] brightness-0 invert"
-            />
-
-            <span className="text-[17px] leading-none">
-              {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}
-            </span>
-          </button>
+          {/* API 기반 즐겨찾기 버튼 */}
+          <BookmarkButton movieId={movie.id} variant="detail" />
         </div>
 
         {/* 평점 영역 */}
         <aside className="w-[472px] shrink-0 border-l border-gray-200 pl-8">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-[21px] font-bold">내 평점</h2>
-
-            <p className="mt-2 text-[12px] text-gray-400">
-              별점은 필수, 후기는 선택이에요.
-            </p>
-
-            {isRatingLoading && (
-              <p className="text-sm text-gray-500">평점을 불러오는 중이에요.</p>
-            )}
-
-            {ratingError && (
-              <p className="text-sm text-red-500">{ratingError}</p>
-            )}
-
-            {!isRatingLoading && !ratingError && (
-              <p className="text-sm text-gray-500">
-                {hasSavedRating
-                  ? "기존에 저장한 평점을 불러왔어요."
-                  : "아직 등록된 평점이 없어요."}
-              </p>
-            )}
-
-            <div className="mt-3 flex gap-2">
-              {[1, 2, 3, 4, 5].map((score) => (
-                <button
-                  key={score}
-                  type="button"
-                  onClick={() => setRating(score)}
-                  className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white"
-                >
-                  <img
-                    src={
-                      score <= rating
-                        ? "/icons/star.svg"
-                        : "/icons/star-outline.svg"
-                    }
-                    alt={`${score}점`}
-                    className="h-6 w-6"
-                  />
-                </button>
-              ))}
-            </div>
-
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="영화를 보고 느낀 점을 남겨보세요."
-              className="mt-3 h-[140px] w-full resize-none rounded-lg border border-gray-200 p-4 text-[14px] outline-none"
+          {ratingsQuery.isPending ? (
+            <p className="text-sm text-gray-500">평점을 불러오는 중이에요.</p>
+          ) : ratingsQuery.isError ? (
+            <p className="text-sm text-red-500">평점을 불러오지 못했어요.</p>
+          ) : (
+            <RatingEditor
+              key={`${movieId}-${savedRating?.ratingId ?? "new"}-${savedRating?.updatedAt ?? ""}`}
+              movieId={movieId}
+              savedRating={savedRating}
             />
-
-            <button
-              type="button"
-              className="mt-3 w-full rounded-lg bg-[#19191D] py-3 font-bold text-white"
-            >
-              평점 저장
-            </button>
-          </div>
+          )}
         </aside>
       </section>
     </main>
