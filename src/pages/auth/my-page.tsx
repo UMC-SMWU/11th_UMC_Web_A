@@ -1,17 +1,25 @@
 import { useState } from "react";
-import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { getMovieDetail } from "@/api/movies/get-movie-detail";
 import Pagination from "@/components/movies/pagination";
 import { useBookmarkStore } from "@/stores/bookmark-store";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { getMe } from "@/api/members/me";
+import { useAuthStore } from "@/stores/auth-store";
 
 const PAGE_SIZE = 5;
-const profile = {
-  nickname: "gs0428",
-  email: "example@cinemalab.kr",
-};
 
 export function MyPage() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 30_000,
+  });
+
+  const profile = accessToken ? data : undefined;
   const movieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(movieIds.length / PAGE_SIZE);
@@ -42,7 +50,9 @@ export function MyPage() {
 
         <section className="border-y border-[#E3E6EB] py-4">
           <h2 className="mb-3 text-sm font-bold">기본 정보</h2>
-
+          {!accessToken && <p>로그인이 필요해요.</p>}
+          {accessToken && isLoading && <p>내 정보를 불러오는 중이에요.</p>}
+          {accessToken && isError && <p>내 정보를 불러오지 못했어요.</p>}
           <div className="flex items-center gap-5">
             <div className="grid size-16 shrink-0 place-items-center rounded-full bg-[#E3E6EB]">
               <img src="/icons/person.svg" alt="" className="size-8" />
@@ -52,13 +62,13 @@ export function MyPage() {
               <div>
                 <dt className="text-xs text-gray-500">닉네임</dt>
                 <dd className="mt-1 text-sm font-semibold">
-                  {profile.nickname}
+                  {profile?.nickname ?? "-"}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs text-gray-500">이메일</dt>
                 <dd className="mt-1 break-all text-sm font-semibold">
-                  {profile.email}
+                  {profile?.email ?? "-"}
                 </dd>
               </div>
             </dl>

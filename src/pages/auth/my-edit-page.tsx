@@ -1,11 +1,81 @@
 import { useEffect, useState } from "react";
+import { useUpdateMeMutation } from "@/hooks/use-update-me-mutation";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "@/api/members/me";
+import { useAuthStore } from "@/stores/auth-store";
+import { checkNicknameDuplicate } from "@/api/members/check-nickname-duplicate";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export function MyEditPage() {
-  const [nickname, setNickname] = useState("gs0428");
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const [editedNickname, setEditedNickname] = useState<string | null>(null);
+  const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
+  const [nicknameMessage, setNicknameMessage] = useState("");
+  const [isCheckingNickname, setIsCheckingNickname] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 30_000,
+  });
+
+  const email = profile?.email ?? "";
   const [preview, setPreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
+
+  const updateMeMutation = useUpdateMeMutation();
+
+  const nickname = editedNickname ?? profile?.nickname ?? "";
+  const trimmedNickname = nickname.trim();
+  const isNicknameUnchanged = trimmedNickname !== profile?.nickname;
+
+  const canSubmit =
+    Boolean(accessToken && profile) &&
+    trimmedNickname.length >= 2 &&
+    trimmedNickname.length <= 12 &&
+    (isNicknameUnchanged || checkedNickname === trimmedNickname) &&
+    !isCheckingNickname;
+
+  const handleCheckNickname = async () => {
+    const targetNickname = trimmedNickname;
+
+    if (targetNickname.length < 2 || targetNickname.length > 12) {
+      setNicknameMessage("닉네임은 2자 이상 12자 이하로 입력해 주세요.");
+      return;
+    }
+
+    setIsCheckingNickname(true);
+    setCheckedNickname(null);
+    setNicknameMessage("");
+
+    try {
+      const result = await checkNicknameDuplicate(targetNickname);
+
+      if (result.available) {
+        setCheckedNickname(targetNickname);
+        setNicknameMessage("사용 가능한 닉네임이에요.");
+      } else {
+        setNicknameMessage(
+          "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.",
+        );
+      }
+    } catch {
+      setNicknameMessage(
+        "닉네임 확인 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      );
+    } finally {
+      setIsCheckingNickname(false);
+    }
+  };
+
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit || updateMeMutation.isPending) return;
+
+    updateMeMutation.mutate({ nickname: trimmedNickname });
+  };
 
   useEffect(() => {
     if (!preview) return;
@@ -15,7 +85,10 @@ export function MyEditPage() {
 
   return (
     <main className="bg-[#f5f6f8] text-[#19191f]">
-      <div className="mx-auto flex min-h-[calc(100dvh-80px)] max-w-[1200px] flex-col px-4 py-6">
+      <form
+        onSubmit={handleSubmit}
+        className="mx-auto flex min-h-[calc(100dvh-80px)] max-w-[1200px] flex-col px-4 py-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">내 정보 수정</h1>
@@ -24,11 +97,10 @@ export function MyEditPage() {
             </p>
           </div>
           <button
-            type="button"
-            disabled
-            className="rounded-lg bg-[#485cde] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            type="submit"
+            disabled={!canSubmit || updateMeMutation.isPending}
           >
-            변경사항 저장
+            {updateMeMutation.isPending ? "저장 중" : "저장"}
           </button>
         </div>
 
@@ -95,18 +167,36 @@ export function MyEditPage() {
                 <input
                   id="nickname"
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={(e) => {
+                    setEditedNickname(e.target.value);
+                    setCheckedNickname(null);
+                    setNicknameMessage("");
+                  }}
                   className="min-w-0 flex-1 text-sm outline-none"
                 />
                 <button
                   type="button"
-                  disabled
+                  onClick={handleCheckNickname}
+                  disabled={isCheckingNickname}
                   className="shrink-0 text-xs font-semibold text-[#485cde]"
                 >
-                  중복 확인
+                  {isCheckingNickname ? "확인 중..." : "중복 확인"}
                 </button>
               </div>
             </div>
+
+            {nicknameMessage && (
+              <p
+                role="status"
+                className={`mt-2 text-xs ${
+                  checkedNickname === trimmedNickname
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {nicknameMessage}
+              </p>
+            )}
 
             <div>
               <label
@@ -118,7 +208,7 @@ export function MyEditPage() {
               <input
                 id="email"
                 type="email"
-                value="example@cinemalab.kr"
+                value={email}
                 readOnly
                 className="h-12 w-full rounded-lg border border-[#E3E6EB] bg-white px-4 text-sm"
               />
@@ -143,7 +233,7 @@ export function MyEditPage() {
             </button>
           </section>
         </div>
-      </div>
+      </form>
     </main>
   );
 }
