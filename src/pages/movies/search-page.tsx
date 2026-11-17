@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { searchMovies } from "../../api/movies/serach-movie";
+import { searchMovies } from "../../api/movies/search-movie";
 
 export function SearchPage() {
   const { query = "" } = useSearch({ from: "/search" });
