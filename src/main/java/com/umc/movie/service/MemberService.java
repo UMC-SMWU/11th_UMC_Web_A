@@ -11,6 +11,7 @@ import com.umc.movie.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import com.umc.movie.entity.Member;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,18 @@ public class MemberService {
 
     @Transactional
     public MemberResponse signUp(SignUpRequest request) {
+        // 비밀번호 UTF-8 바이트 길이 검증
+        int passwordBytes = request.password()
+                .getBytes(StandardCharsets.UTF_8).length;
+
+        if (passwordBytes > 72) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "MEMBER400",
+                    "비밀번호는 UTF-8 기준 72비트 이하여야 합니다."
+            );
+        }
+
         if (memberRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
