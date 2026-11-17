@@ -86,6 +86,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={!canSubmit || loginMutation.isPending}
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-[#2563EB] text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#485cde]/50"
           >
             {loginMutation.isPending ? "로그인 중" : "로그인"}
           </button>
