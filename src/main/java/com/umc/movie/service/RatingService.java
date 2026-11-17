@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.dao.DataIntegrityViolationException;
 import java.util.List;
 
 @Service
@@ -54,7 +54,15 @@ public class RatingService {
                 .comment(request.comment())
                 .build();
 
-        return RatingResponse.from(ratingRepository.save(rating));
+        try {
+            return RatingResponse.from(ratingRepository.save(rating));
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "RATING409_1",
+                    "이미 이 영화에 평점을 남기셨습니다."
+            );
+        }
     }
 
     @Transactional
