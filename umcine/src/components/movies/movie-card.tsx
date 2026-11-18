@@ -2,12 +2,14 @@ import { Link } from "@tanstack/react-router";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import { BookmarkButton } from "../bookmark-button";
+import { useIsInFavorites } from "../../hooks/use-favorites";
 
 interface MovieCardProps {
   movie: TmdbMovieListItem;
 }
 
 export function MovieCard({ movie }: MovieCardProps) {
+  const isBookmarked = useIsInFavorites(movie.id);
   const posterUrl = getTmdbPosterUrl(movie.poster_path);
 
   return (
@@ -34,6 +36,7 @@ export function MovieCard({ movie }: MovieCardProps) {
         <BookmarkButton
           movieId={movie.id}
           movieTitle={movie.title}
+          isBookmarked={isBookmarked}
           className="absolute top-2 right-2"
         />
       </div>

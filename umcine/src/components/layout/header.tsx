@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
 
 const MENUS = [
   { label: "영화", to: "/" },
@@ -7,10 +10,19 @@ const MENUS = [
   { label: "내 정보", to: "/me" },
 ] as const;
 
-// 8주차 로그인 연동 후 실제 로그인 상태로 교체
-const isLoggedIn = false;
+const authButtonClass =
+  "flex h-[42px] items-center justify-center rounded-lg bg-primary px-4 text-sm leading-[17px] font-extrabold text-white";
 
 export function Header() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
   return (
     <header className="flex h-[91px] items-center justify-between bg-white px-20 py-6">
       <div className="flex items-center gap-[42px]">
@@ -49,12 +61,18 @@ export function Header() {
         >
           <img src="/icons/movie-icons/search.svg" alt="" aria-hidden="true" className="size-6" />
         </Link>
-        <Link
-          to={isLoggedIn ? "/me" : "/login"}
-          className="flex h-[42px] items-center justify-center rounded-lg bg-primary px-4 text-sm leading-[17px] font-extrabold text-white"
-        >
-          {isLoggedIn ? "마이페이지" : "로그인"}
-        </Link>
+
+        {!accessToken ? (
+          <Link to="/login" className={authButtonClass}>
+            로그인
+          </Link>
+        ) : meQuery.isLoading ? (
+          <span className="h-[42px] w-24 animate-pulse rounded-lg bg-gray-200" />
+        ) : (
+          <Link to="/me" className={authButtonClass}>
+            마이페이지
+          </Link>
+        )}
       </div>
     </header>
   );

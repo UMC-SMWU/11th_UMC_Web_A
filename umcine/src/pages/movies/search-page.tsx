@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/search-movies";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import { BookmarkButton } from "../../components/bookmark-button";
+import { useFavoritesQuery } from "../../hooks/use-favorites";
+import { useAuthStore } from "../../stores/auth-store";
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
@@ -25,6 +27,13 @@ export function SearchPage() {
   });
 
   const searchResults = searchQuery.data?.results ?? [];
+
+  // 즐겨찾기 목록을 한 번 받아서 검색 결과마다 포함 여부만 확인
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const favoritesQuery = useFavoritesQuery();
+  const favoriteMovieIds = new Set(
+    accessToken ? favoritesQuery.data?.map((favorite) => favorite.movieId) : [],
+  );
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,6 +115,7 @@ export function SearchPage() {
                   <BookmarkButton
                     movieId={movie.id}
                     movieTitle={movie.title}
+                    isBookmarked={favoriteMovieIds.has(movie.id)}
                     className="ml-auto shrink-0 self-start"
                   />
                 </li>
