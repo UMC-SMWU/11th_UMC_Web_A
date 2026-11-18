@@ -4,7 +4,11 @@ import { cn } from "../../utils/cn";
 const MENUS = [
   { label: "영화", to: "/" },
   { label: "검색", to: "/search" },
+  { label: "내 정보", to: "/me" },
 ] as const;
+
+// 8주차 로그인 연동 후 실제 로그인 상태로 교체
+const isLoggedIn = false;
 
 export function Header() {
   return (
@@ -34,9 +38,6 @@ export function Header() {
               )}
             </Link>
           ))}
-          <button type="button" className="text-sm leading-[17px] font-bold text-sub">
-            내 정보
-          </button>
         </nav>
       </div>
 
@@ -48,12 +49,12 @@ export function Header() {
         >
           <img src="/icons/movie-icons/search.svg" alt="" aria-hidden="true" className="size-6" />
         </Link>
-        <button
-          type="button"
+        <Link
+          to={isLoggedIn ? "/me" : "/login"}
           className="flex h-[42px] items-center justify-center rounded-lg bg-primary px-4 text-sm leading-[17px] font-extrabold text-white"
         >
-          로그인
-        </button>
+          {isLoggedIn ? "마이페이지" : "로그인"}
+        </Link>
       </div>
     </header>
   );
