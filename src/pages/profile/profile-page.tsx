@@ -1,15 +1,25 @@
 import { Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
+import { useAuthStore } from "../../stores/auth-store";
 import { useBookmarkStore } from "../../stores/bookmark-store";
-import { useProfileStore } from "../../stores/profile-store";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function ProfilePage() {
-  const nickname = useProfileStore((state) => state.nickname);
-  const email = useProfileStore((state) => state.email);
-  const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const bookmarkedMovieIds = useBookmarkStore(
+    (state) => state.bookmarkedMovieIds,
+  );
+
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
   const favoriteQueries = useQueries({
     queries: bookmarkedMovieIds.map((movieId) => ({
@@ -17,6 +27,24 @@ export function ProfilePage() {
       queryFn: () => getMovieDetail(movieId),
     })),
   });
+
+  if (meQuery.isPending) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오는 중이에요.</p>
+      </main>
+    );
+  }
+
+  if (meQuery.isError) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오지 못했어요.</p>
+      </main>
+    );
+  }
+
+  const member = meQuery.data;
 
   return (
     <main className="bg-[#f7f7f8] px-10 pb-24 pt-10">
@@ -40,11 +68,15 @@ export function ProfilePage() {
             <dl className="grid flex-1 grid-cols-2 gap-10">
               <div>
                 <dt className="text-xs text-[#9ca3af]">닉네임</dt>
-                <dd className="mt-1 text-lg font-bold text-[#111111]">{nickname}</dd>
+                <dd className="mt-1 text-lg font-bold text-[#111111]">
+                  {member.nickname}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-[#9ca3af]">이메일</dt>
-                <dd className="mt-1 text-lg font-bold text-[#111111]">{email}</dd>
+                <dd className="mt-1 text-lg font-bold text-[#111111]">
+                  {member.email}
+                </dd>
               </div>
             </dl>
           </div>
@@ -62,7 +94,10 @@ export function ProfilePage() {
                 const movie = query.data;
                 if (!movie) {
                   return (
-                    <li key={bookmarkedMovieIds[index]} className="text-sm text-[#999999]">
+                    <li
+                      key={bookmarkedMovieIds[index]}
+                      className="text-sm text-[#999999]"
+                    >
                       {query.isError ? "불러오지 못했어요." : "불러오는 중이에요."}
                     </li>
                   );
@@ -86,7 +121,9 @@ export function ProfilePage() {
                           이미지 없음
                         </div>
                       )}
-                      <p className="mt-2 font-bold text-[#111111]">{movie.title}</p>
+                      <p className="mt-2 font-bold text-[#111111]">
+                        {movie.title}
+                      </p>
                       <p className="text-sm text-[#9ca3af]">
                         {movie.release_date.replaceAll("-", ".")}
                       </p>
