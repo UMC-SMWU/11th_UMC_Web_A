@@ -1,9 +1,12 @@
 import { useState } from "react";
-import type { SubmitEvent } from "react";
+//import type { SubmitEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { useNavigate } from "@tanstack/react-router";
-import { login } from "../../api/members/login";
-import { useAuthStore } from "../../stores/auth-store";
+//import { useNavigate } from "@tanstack/react-router";
+//import { login } from "../../api/members/login";
+//import { useAuthStore } from "../../stores/auth-store";
+import { useLoginMutation } from "../../hooks/use-login-mutation";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DEFAULT_FORM = {
   email: "",
@@ -19,35 +22,30 @@ const iconClass =
   "pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]";
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const [form, setForm] = useState(DEFAULT_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  //const [isSubmitting, setIsSubmitting] = useState(false);
+  //const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   // 이메일과 비밀번호가 모두 입력되어야 로그인 버튼 활성화
-  const isFormFilled = form.email.trim().length > 0 && form.password.length > 0;
+  //const isFormFilled = form.email.trim().length > 0 && form.password.length > 0;
 
   const handleChangeField = (key: LoginFormKey, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (isSubmitting) return;
+  const loginMutation = useLoginMutation();
+  const canSubmit =
+    EMAIL_REGEX.test(form.email.trim()) && form.password.length > 0;
 
-    setIsSubmitting(true);
-    try {
-      const response = await login({
-        email: form.email.trim(),
-        password: form.password,
-      });
-      setAccessToken(response.accessToken);
-      navigate({ to: "/" });
-    } catch {
-      alert("로그인에 실패했어요. 이메일과 비밀번호를 확인해 주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit || loginMutation.isPending) return;
+
+    loginMutation.mutate({
+      email: form.email.trim(),
+      password: form.password,
+    });
   };
 
   return (
@@ -121,13 +119,12 @@ export function LoginPage() {
               />
             </div>
           </div>
-
           <button
             type='submit'
-            disabled={!isFormFilled}
+            disabled={!canSubmit || loginMutation.isPending}
             className='mt-2 h-12 w-full cursor-pointer rounded-lg bg-blue-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-blue-300'
           >
-            로그인
+            {loginMutation.isPending ? "로그인 중" : "로그인"}
           </button>
         </form>
 
