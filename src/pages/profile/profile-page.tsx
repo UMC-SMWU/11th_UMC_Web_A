@@ -1,17 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { getFavorites } from "../../api/favorites/get-favorites";
 import { getMe } from "../../api/members/me";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
 import { useAuthStore } from "../../stores/auth-store";
-import { useBookmarkStore } from "../../stores/bookmark-store";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function ProfilePage() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const bookmarkedMovieIds = useBookmarkStore(
-    (state) => state.bookmarkedMovieIds,
-  );
 
   const meQuery = useQuery({
     queryKey: ["members", "me"],
@@ -21,10 +18,20 @@ export function ProfilePage() {
     retry: false,
   });
 
-  const favoriteQueries = useQueries({
-    queries: bookmarkedMovieIds.map((movieId) => ({
-      queryKey: ["movies", "detail", movieId],
-      queryFn: () => getMovieDetail(movieId),
+  const favoritesQuery = useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavorites,
+    enabled: Boolean(accessToken),
+  });
+
+  const favorites = favoritesQuery.data ?? [];
+
+  // 즐겨찾기 응답에 영화 정보가 없어서 TMDB 상세를 조회
+  // (응답에 제목, 포스터가 있으면 이 블록을 지우고 favorites로 바로 그리기)
+  const favoriteMovieQueries = useQueries({
+    queries: favorites.map((favorite) => ({
+      queryKey: ["movies", "detail", favorite.movieId],
+      queryFn: () => getMovieDetail(favorite.movieId),
     })),
   });
 
@@ -86,19 +93,26 @@ export function ProfilePage() {
 
         <section>
           <h2 className="mb-6 text-xl font-bold text-[#111111]">내 즐겨찾기</h2>
-          {bookmarkedMovieIds.length === 0 ? (
+
+          {favoritesQuery.isPending ? (
+            <p className="text-[#999999]">즐겨찾기를 불러오는 중이에요.</p>
+          ) : favoritesQuery.isError ? (
+            <p className="text-[#999999]">즐겨찾기를 불러오지 못했어요.</p>
+          ) : favorites.length === 0 ? (
             <p className="text-[#999999]">즐겨찾기한 영화가 없어요.</p>
           ) : (
             <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {favoriteQueries.map((query, index) => {
+              {favoriteMovieQueries.map((query, index) => {
                 const movie = query.data;
                 if (!movie) {
                   return (
                     <li
-                      key={bookmarkedMovieIds[index]}
+                      key={favorites[index].movieId}
                       className="text-sm text-[#999999]"
                     >
-                      {query.isError ? "불러오지 못했어요." : "불러오는 중이에요."}
+                      {query.isError
+                        ? "불러오지 못했어요."
+                        : "불러오는 중이에요."}
                     </li>
                   );
                 }
