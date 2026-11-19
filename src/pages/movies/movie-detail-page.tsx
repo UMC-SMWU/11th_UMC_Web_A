@@ -9,6 +9,7 @@ import {
 } from "../../utils/movies/tmdb-image";
 import { useNavigate } from "@tanstack/react-router";
 import { useFavorite } from "../../hooks/use-favorite";
+import { RatingPanel } from "../../components/movies/rating-panel";
 
 function formatRuntime(runtime: number | null) {
   if (typeof runtime !== "number") return "상영 시간 정보가 없어요.";
@@ -141,6 +142,7 @@ export function MovieDetailPage() {
             {favorite.isFavorite ? "🔖 즐겨찾기 해제" : "🔖 즐겨찾기"}
           </button>
         </div>
+        <RatingPanel movieId={movie.id} />
       </div>
     </main>
   );
