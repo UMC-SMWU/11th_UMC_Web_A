@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
-import { BookmarkButton } from "../../components/bookmark-button";
 import Pagination from "../../components/movies/pagination";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
@@ -146,10 +145,6 @@ export function SearchPage() {
                         이미지 없음
                       </div>
                     )}
-                    <BookmarkButton
-                      movieId={movie.id}
-                      className='absolute right-1.5 top-1.5 h-7 w-7 bg-black/55 text-white'
-                    />
                   </div>
                   <div className='flex-1'>
                     <h3 className='text-base font-semibold text-[#111111]'>

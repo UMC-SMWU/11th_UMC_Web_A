@@ -1,24 +1,90 @@
 import { useState } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import type { MemberInfo } from "../../api/members/me";
+import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
-import { useProfileStore } from "../../stores/profile-store";
+import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
+import { useAuthStore } from "../../stores/auth-store";
 import { cn } from "../../utils/cn";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function ProfileEditPage() {
-  const navigate = useNavigate();
-  const savedNickname = useProfileStore((state) => state.nickname);
-  const email = useProfileStore((state) => state.email);
-  const setSavedNickname = useProfileStore((state) => state.setNickname);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  if (meQuery.isPending) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오는 중이에요.</p>
+      </main>
+    );
+  }
+
+  if (meQuery.isError) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오지 못했어요.</p>
+      </main>
+    );
+  }
+
+  return <ProfileEditForm member={meQuery.data} />;
+}
+
+function ProfileEditForm({ member }: { member: MemberInfo }) {
+  const savedNickname = member.nickname;
 
   const [nickname, setNickname] = useState(savedNickname);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [duplicateCheck, setDuplicateCheck] = useState({
+    isChecking: false,
+    isAvailable: false,
+  });
+  const updateMeMutation = useUpdateMeMutation();
 
   const trimmedNickname = nickname.trim();
-  const isNicknameValid = trimmedNickname.length >= 2 && trimmedNickname.length <= 12;
+  const isNicknameValid =
+    trimmedNickname.length >= 2 && trimmedNickname.length <= 12;
+  const isNicknameChanged = trimmedNickname !== savedNickname;
   const showNicknameError = nickname.length > 0 && !isNicknameValid;
+
+  // 닉네임을 바꿨다면 중복 확인까지 통과해야 저장 가능
+  const canSubmit =
+    isNicknameValid && (!isNicknameChanged || duplicateCheck.isAvailable);
+
+  const handleNicknameChange = (value: string) => {
+    if (duplicateCheck.isChecking) return;
+    setNickname(value);
+    setDuplicateCheck({ isChecking: false, isAvailable: false }); // 값이 바뀌면 재확인
+  };
+
+  const handleCheckDuplicate = async () => {
+    if (!isNicknameValid || !isNicknameChanged || duplicateCheck.isChecking)
+      return;
+
+    setDuplicateCheck({ isChecking: true, isAvailable: false });
+    try {
+      const response = await checkNicknameDuplicate(trimmedNickname);
+      setDuplicateCheck({ isChecking: false, isAvailable: response.available });
+      alert(
+        response.available
+          ? "사용할 수 있는 닉네임이에요."
+          : "이미 사용 중인 닉네임이에요.",
+      );
+    } catch {
+      setDuplicateCheck({ isChecking: false, isAvailable: false });
+      alert("중복 확인에 실패했어요. 다시 시도해 주세요.");
+    }
+  };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,13 +100,11 @@ export function ProfileEditPage() {
     });
   };
 
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!isNicknameValid) return;
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit || updateMeMutation.isPending) return;
 
-    // 내 정보 수정 API 연결 전까지는 store에만 반영
-    setSavedNickname(trimmedNickname);
-    navigate({ to: "/profile" });
+    updateMeMutation.mutate({ nickname: trimmedNickname });
   };
 
   const handleWithdraw = () => {
@@ -60,10 +124,10 @@ export function ProfileEditPage() {
           </div>
           <button
             type="submit"
-            disabled={!isNicknameValid}
+            disabled={!canSubmit || updateMeMutation.isPending}
             className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-blue-300"
           >
-            변경사항 저장
+            {updateMeMutation.isPending ? "저장 중" : "변경사항 저장"}
           </button>
         </div>
 
@@ -102,14 +166,17 @@ export function ProfileEditPage() {
           {/* 닉네임, 이메일 */}
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <label htmlFor="nickname" className="text-sm font-bold text-[#111111]">
+              <label
+                htmlFor="nickname"
+                className="text-sm font-bold text-[#111111]"
+              >
                 닉네임
               </label>
               <div className="relative">
                 <input
                   id="nickname"
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={(e) => handleNicknameChange(e.target.value)}
                   aria-invalid={showNicknameError}
                   className={cn(
                     "h-12 w-full rounded-xl border bg-white px-4 pr-24 text-sm outline-none focus:border-blue-600",
@@ -118,9 +185,15 @@ export function ProfileEditPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-600"
+                  disabled={
+                    !isNicknameValid ||
+                    !isNicknameChanged ||
+                    duplicateCheck.isChecking
+                  }
+                  onClick={handleCheckDuplicate}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-sm font-bold text-blue-600 disabled:cursor-not-allowed disabled:text-blue-300"
                 >
-                  중복 확인
+                  {duplicateCheck.isChecking ? "확인 중" : "중복 확인"}
                 </button>
               </div>
               {showNicknameError && (
@@ -131,12 +204,15 @@ export function ProfileEditPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-sm font-bold text-[#111111]">
+              <label
+                htmlFor="email"
+                className="text-sm font-bold text-[#111111]"
+              >
                 이메일
               </label>
               <input
                 id="email"
-                value={email}
+                value={member.email}
                 readOnly
                 className="h-12 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm outline-none"
               />
@@ -150,7 +226,8 @@ export function ProfileEditPage() {
         <div>
           <h2 className="font-bold text-red-600">회원 탈퇴</h2>
           <p className="mt-1 text-xs text-red-600">
-            탈퇴하면 작성한 평점, 후기와 즐겨찾기가 모두 삭제되며 복구할 수 없습니다.
+            탈퇴하면 작성한 평점, 후기와 즐겨찾기가 모두 삭제되며 복구할 수
+            없습니다.
           </p>
         </div>
         <button

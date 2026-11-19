@@ -1,22 +1,57 @@
 import { Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { getFavorites } from "../../api/favorites/get-favorites";
+import { getMe } from "../../api/members/me";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
-import { useBookmarkStore } from "../../stores/bookmark-store";
-import { useProfileStore } from "../../stores/profile-store";
+import { useAuthStore } from "../../stores/auth-store";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function ProfilePage() {
-  const nickname = useProfileStore((state) => state.nickname);
-  const email = useProfileStore((state) => state.email);
-  const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
-  const favoriteQueries = useQueries({
-    queries: bookmarkedMovieIds.map((movieId) => ({
-      queryKey: ["movies", "detail", movieId],
-      queryFn: () => getMovieDetail(movieId),
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const favoritesQuery = useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavorites,
+    enabled: Boolean(accessToken),
+  });
+
+  const favorites = favoritesQuery.data ?? [];
+
+  // 즐겨찾기 응답에 영화 정보가 없어서 TMDB 상세를 조회
+  // (응답에 제목, 포스터가 있으면 이 블록을 지우고 favorites로 바로 그리기)
+  const favoriteMovieQueries = useQueries({
+    queries: favorites.map((favorite) => ({
+      queryKey: ["movies", "detail", favorite.movieId],
+      queryFn: () => getMovieDetail(favorite.movieId),
     })),
   });
+
+  if (meQuery.isPending) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오는 중이에요.</p>
+      </main>
+    );
+  }
+
+  if (meQuery.isError) {
+    return (
+      <main className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#999999]">내 정보를 불러오지 못했어요.</p>
+      </main>
+    );
+  }
+
+  const member = meQuery.data;
 
   return (
     <main className="bg-[#f7f7f8] px-10 pb-24 pt-10">
@@ -40,11 +75,15 @@ export function ProfilePage() {
             <dl className="grid flex-1 grid-cols-2 gap-10">
               <div>
                 <dt className="text-xs text-[#9ca3af]">닉네임</dt>
-                <dd className="mt-1 text-lg font-bold text-[#111111]">{nickname}</dd>
+                <dd className="mt-1 text-lg font-bold text-[#111111]">
+                  {member.nickname}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-[#9ca3af]">이메일</dt>
-                <dd className="mt-1 text-lg font-bold text-[#111111]">{email}</dd>
+                <dd className="mt-1 text-lg font-bold text-[#111111]">
+                  {member.email}
+                </dd>
               </div>
             </dl>
           </div>
@@ -54,16 +93,26 @@ export function ProfilePage() {
 
         <section>
           <h2 className="mb-6 text-xl font-bold text-[#111111]">내 즐겨찾기</h2>
-          {bookmarkedMovieIds.length === 0 ? (
+
+          {favoritesQuery.isPending ? (
+            <p className="text-[#999999]">즐겨찾기를 불러오는 중이에요.</p>
+          ) : favoritesQuery.isError ? (
+            <p className="text-[#999999]">즐겨찾기를 불러오지 못했어요.</p>
+          ) : favorites.length === 0 ? (
             <p className="text-[#999999]">즐겨찾기한 영화가 없어요.</p>
           ) : (
             <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {favoriteQueries.map((query, index) => {
+              {favoriteMovieQueries.map((query, index) => {
                 const movie = query.data;
                 if (!movie) {
                   return (
-                    <li key={bookmarkedMovieIds[index]} className="text-sm text-[#999999]">
-                      {query.isError ? "불러오지 못했어요." : "불러오는 중이에요."}
+                    <li
+                      key={favorites[index].movieId}
+                      className="text-sm text-[#999999]"
+                    >
+                      {query.isError
+                        ? "불러오지 못했어요."
+                        : "불러오는 중이에요."}
                     </li>
                   );
                 }
@@ -86,7 +135,9 @@ export function ProfilePage() {
                           이미지 없음
                         </div>
                       )}
-                      <p className="mt-2 font-bold text-[#111111]">{movie.title}</p>
+                      <p className="mt-2 font-bold text-[#111111]">
+                        {movie.title}
+                      </p>
                       <p className="text-sm text-[#9ca3af]">
                         {movie.release_date.replaceAll("-", ".")}
                       </p>

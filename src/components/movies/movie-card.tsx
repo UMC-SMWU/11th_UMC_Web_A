@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
-import { BookmarkButton } from "../bookmark-button";
 
 interface MovieCardProps {
   movie: TmdbMovieListItem;
@@ -30,11 +29,6 @@ export default function MovieCard({ movie }: MovieCardProps) {
             </div>
           )}
         </Link>
-
-        <BookmarkButton
-          movieId={movie.id}
-          className="absolute right-2.5 top-2.5 h-8 w-8 bg-black/55 text-white"
-        />
       </div>
 
       <Link
