@@ -4,7 +4,11 @@ import { Link, useParams } from "@tanstack/react-router";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getMovieDetailErrorMessage } from "../../api/movies/get-movie-detail-error-message";
 import { cn } from "../../utils/cn";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useCreateFavoriteMutation } from "@/hooks/use-create-favorite-mutation";
+import { useAuthStore } from "@/stores/auth-store";
+import { useNavigate } from "@tanstack/react-router";
+import { useFavoriteQuery } from "@/hooks/use-favorite-query";
+import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation";
 
 export function MovieDetailPage() {
   const [rating, setRating] = useState(0);
@@ -23,11 +27,61 @@ export function MovieDetailPage() {
     staleTime: 30 * 1000,
   });
 
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(parsedMovieId),
-  );
+  const navigate = useNavigate();
+  const accessToken = useAuthStore((state) => state.accessToken);
 
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const {
+    data: favoriteData,
+    isPending: isFavoritePending,
+    isError: isFavoriteError,
+  } = useFavoriteQuery(parsedMovieId);
+
+  const createFavoriteMutation = useCreateFavoriteMutation();
+  const deleteFavoriteMutation = useDeleteFavoriteMutation();
+
+  // 현재 영화의 즐겨찾기 여부
+  const isBookmarked = favoriteData?.result.isFavorite ?? false;
+
+  // 즐겨찾기 등록 버튼 클릭
+  const handleBookmarkClick = () => {
+    if (!accessToken) {
+      alert("로그인이 필요합니다.");
+      navigate({ to: "/login" });
+      return;
+    }
+
+    if (
+      createFavoriteMutation.isPending ||
+      deleteFavoriteMutation.isPending ||
+      isFavoritePending ||
+      isFavoriteError
+    ) {
+      return;
+    }
+
+    if (isBookmarked) {
+      deleteFavoriteMutation.mutate(parsedMovieId, {
+        onSuccess: () => {
+          alert("즐겨찾기를 해제했어요!");
+        },
+        onError: () => {
+          alert("즐겨찾기 해제에 실패했어요.");
+        },
+      });
+    } else {
+      createFavoriteMutation.mutate(
+        { movieId: parsedMovieId },
+        {
+          onSuccess: () => {
+            alert("즐겨찾기에 등록했어요!");
+          },
+          onError: () => {
+            alert("즐겨찾기 등록에 실패했어요.");
+          },
+        },
+      );
+    }
+  };
 
   if (!isValidMovieId) {
     return (
@@ -145,10 +199,26 @@ export function MovieDetailPage() {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => toggleBookmark(movie.id)}
-                className="rounded-md border border-gray-300 bg-[#2563EB] px-4 py-2 text-sm font-extrabold text-[#FFFFFF]"
+                onClick={handleBookmarkClick}
+                disabled={
+                  createFavoriteMutation.isPending ||
+                  deleteFavoriteMutation.isPending ||
+                  (Boolean(accessToken) &&
+                    (isFavoritePending || isFavoriteError))
+                }
+                className="rounded-md border border-gray-300 bg-[#2563EB] px-4 py-2 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기 등록"}
+                {createFavoriteMutation.isPending
+                  ? "등록 중..."
+                  : deleteFavoriteMutation.isPending
+                    ? "해제 중..."
+                    : accessToken && isFavoritePending
+                      ? "확인 중..."
+                      : accessToken && isFavoriteError
+                        ? "조회 실패"
+                        : isBookmarked
+                          ? "즐겨찾기 해제"
+                          : "즐겨찾기 등록"}
               </button>
             </div>
           </div>

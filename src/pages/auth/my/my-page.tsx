@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { getMovieDetail } from "@/api/movies/get-movie-detail";
 import Pagination from "@/components/movies/pagination";
-import { useBookmarkStore } from "@/stores/bookmark-store";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { getMe } from "@/api/members/me";
 import { useAuthStore } from "@/stores/auth-store";
+import { useFavoritesQuery } from "@/hooks/use-favorites-query";
 
 const PAGE_SIZE = 5;
 
@@ -20,7 +20,14 @@ export function MyPage() {
   });
 
   const profile = accessToken ? data : undefined;
-  const movieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
+  const {
+    data: favoritesData,
+    isPending: isFavoritesPending,
+    isError: isFavoritesError,
+  } = useFavoritesQuery();
+
+  const movieIds =
+    favoritesData?.result.map((favorite) => favorite.movieId) ?? [];
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(movieIds.length / PAGE_SIZE);
   const currentPage = Math.min(page, Math.max(1, totalPages));
@@ -31,6 +38,7 @@ export function MyPage() {
     queries: visibleIds.map((id) => ({
       queryKey: ["movies", "detail", id],
       queryFn: () => getMovieDetail(id),
+      enabled: Boolean(accessToken) && !isFavoritesPending && !isFavoritesError,
       staleTime: 30_000,
     })),
   });
@@ -78,7 +86,15 @@ export function MyPage() {
         <section className="pt-6">
           <h2 className="mb-3 text-sm font-bold">내 즐겨찾기</h2>
 
-          {movieIds.length === 0 ? (
+          {isFavoritesPending ? (
+            <p className="text-sm text-gray-500">
+              즐겨찾기를 불러오는 중이에요.
+            </p>
+          ) : isFavoritesError ? (
+            <p className="text-sm text-red-500">
+              즐겨찾기 목록을 불러오지 못했어요.
+            </p>
+          ) : movieIds.length === 0 ? (
             <p className="text-sm text-gray-500">
               즐겨찾기에 추가한 영화가 없어요.
             </p>
