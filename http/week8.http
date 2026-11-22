@@ -1,0 +1,118 @@
+### 0. 준비: 로그인 - accessToken을 tokenA에 자동 저장 (week7.http에서 a@umc.com 가입 필요)
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@umc.com",
+  "password": "Umc1234!"
+}
+
+> {% client.global.set("tokenA", response.body.result.accessToken); %}
+
+### 1. 즐겨찾기 등록 (201)
+POST http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 550
+}
+
+### 2. 같은 요청 한 번 더 (409 FAVORITE409_1)
+POST http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 550
+}
+
+### 3. 내 즐겨찾기 목록 (200)
+GET http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+
+### 4. 즐겨찾기 여부 - 등록한 영화 (200, isFavorite: true)
+GET http://localhost:8080/favorites/550
+Authorization: Bearer {{tokenA}}
+
+### 5. 즐겨찾기 해제 (200, result: null)
+DELETE http://localhost:8080/favorites/550
+Authorization: Bearer {{tokenA}}
+
+### 6. 해제 후 여부 (200, isFavorite: false)
+GET http://localhost:8080/favorites/550
+Authorization: Bearer {{tokenA}}
+
+### 7. 빈 목록 (200, [])
+GET http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+
+### 8. 영화 기록 저장 - 평점 + 즐겨찾기 (201, rating과 favorite 모두)
+POST http://localhost:8080/movie-records
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 238,
+  "score": 5,
+  "comment": "다시 보고 싶은 영화입니다.",
+  "addToFavorites": true
+}
+
+### 9. 같은 요청 다시 (409 RATING409_1, 새 행이 생기지 않아야 함)
+POST http://localhost:8080/movie-records
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 238,
+  "score": 5,
+  "comment": "다시 보고 싶은 영화입니다.",
+  "addToFavorites": true
+}
+
+### 10. 트랜잭션 롤백 확인: 즐겨찾기만 이미 있는 영화에 기록 저장 (409 FAVORITE409_1, rating도 저장되지 않아야 함)
+POST http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 680
+}
+
+###
+POST http://localhost:8080/movie-records
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 680,
+  "score": 4,
+  "comment": "롤백 확인",
+  "addToFavorites": true
+}
+
+### 11. 평점만 확인 - 680에는 평점이 없어야 한다 (rating 롤백 확인)
+GET http://localhost:8080/members/1/ratings
+
+### 실패 케이스
+### 12. 토큰 없이 즐겨찾기 등록 (401 AUTH401_2)
+POST http://localhost:8080/favorites
+Content-Type: application/json
+
+{
+  "movieId": 550
+}
+
+### 13. movieId에 0 (400)
+POST http://localhost:8080/favorites
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "movieId": 0
+}
+
+### 14. 존재하지 않는 즐겨찾기 해제 (404 FAVORITE404_1)
+DELETE http://localhost:8080/favorites/999999
+Authorization: Bearer {{tokenA}}
