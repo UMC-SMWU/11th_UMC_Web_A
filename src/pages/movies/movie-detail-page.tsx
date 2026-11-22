@@ -9,10 +9,14 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useNavigate } from "@tanstack/react-router";
 import { useFavoriteQuery } from "@/hooks/use-favorite-query";
 import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation";
+import { getMemberIdFromToken } from "@/utils/get-member-id-from-token";
+import { useMemberRatingsQuery } from "@/hooks/use-member-ratings-query";
+import { useCreateRatingMutation } from "@/hooks/use-create-rating-mutation";
 
 export function MovieDetailPage() {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState<string | null>(null);
 
   const { movieId } = useParams({ from: "/movies/$movieId" });
 
@@ -29,6 +33,17 @@ export function MovieDetailPage() {
 
   const navigate = useNavigate();
   const accessToken = useAuthStore((state) => state.accessToken);
+
+  const memberId = getMemberIdFromToken(accessToken);
+  const { data: memberRatings } = useMemberRatingsQuery(memberId);
+  const myRating = memberRatings?.find(
+    (item) => item.movieId === parsedMovieId,
+  );
+
+  const displayedRating = rating ?? myRating?.score ?? 0;
+  const displayedComment = comment ?? myRating?.comment ?? "";
+
+  const createRatingMutation = useCreateRatingMutation();
 
   const {
     data: favoriteData,
@@ -81,6 +96,44 @@ export function MovieDetailPage() {
         },
       );
     }
+  };
+
+  const handleRatingSubmit = () => {
+    if (!accessToken) {
+      alert("로그인이 필요합니다.");
+      navigate({ to: "/login" });
+      return;
+    }
+
+    if (displayedRating === 0) {
+      alert("별점을 선택해 주세요.");
+      return;
+    }
+
+    if (createRatingMutation.isPending) {
+      return;
+    }
+
+    if (myRating) {
+      alert("이미 등록한 평점이 있어요. 평점 수정 기능을 이용해 주세요.");
+      return;
+    }
+
+    createRatingMutation.mutate(
+      {
+        movieId: parsedMovieId,
+        score: displayedRating,
+        comment: displayedComment,
+      },
+      {
+        onSuccess: () => {
+          alert("평점이 등록되었어요!");
+        },
+        onError: () => {
+          alert("평점 등록에 실패했어요.");
+        },
+      },
+    );
   };
 
   if (!isValidMovieId) {
@@ -243,8 +296,8 @@ export function MovieDetailPage() {
                 className={cn(
                   "rounded-lg border border-[#E3E6EB] bg-white px-1.5 py-1",
                   {
-                    "text-yellow-400": star <= (hoverRating || rating),
-                    "text-[#606774]": star > (hoverRating || rating),
+                    "text-yellow-400": star <= (hoverRating || displayedRating),
+                    "text-[#606774]": star > (hoverRating || displayedRating),
                   },
                 )}
               >
@@ -255,15 +308,23 @@ export function MovieDetailPage() {
 
           <textarea
             rows={3}
+            value={displayedComment}
+            onChange={(e) => setComment(e.target.value)}
             placeholder="영화를 보고 느낀 점을 남겨보세요."
             className="w-full resize-none rounded-md border border-[#E3E6EB] p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-[#FFFFFF]"
           />
 
           <button
             type="button"
-            className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+            onClick={handleRatingSubmit}
+            disabled={createRatingMutation.isPending || Boolean(myRating)}
+            className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            평점 저장
+            {createRatingMutation.isPending
+              ? "저장 중..."
+              : myRating
+                ? "등록된 평점"
+                : "평점 저장"}
           </button>
         </div>
       </section>
