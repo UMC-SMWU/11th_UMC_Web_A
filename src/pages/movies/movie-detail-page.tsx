@@ -12,6 +12,7 @@ import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation"
 import { getMemberIdFromToken } from "@/utils/get-member-id-from-token";
 import { useMemberRatingsQuery } from "@/hooks/use-member-ratings-query";
 import { useCreateRatingMutation } from "@/hooks/use-create-rating-mutation";
+import { useUpdateRatingMutation } from "@/hooks/use-update-rating-mutation";
 
 export function MovieDetailPage() {
   const [rating, setRating] = useState<number | null>(null);
@@ -35,7 +36,11 @@ export function MovieDetailPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const memberId = getMemberIdFromToken(accessToken);
-  const { data: memberRatings } = useMemberRatingsQuery(memberId);
+  const {
+    data: memberRatings,
+    isPending: isRatingsPending,
+    isError: isRatingsError,
+  } = useMemberRatingsQuery(memberId);
   const myRating = memberRatings?.find(
     (item) => item.movieId === parsedMovieId,
   );
@@ -44,6 +49,7 @@ export function MovieDetailPage() {
   const displayedComment = comment ?? myRating?.comment ?? "";
 
   const createRatingMutation = useCreateRatingMutation();
+  const updateRatingMutation = useUpdateRatingMutation();
 
   const {
     data: favoriteData,
@@ -105,20 +111,44 @@ export function MovieDetailPage() {
       return;
     }
 
+    if (!isValidMovieId) return;
+
+    if (isRatingsPending || isRatingsError || memberId === undefined) {
+      alert("평점 정보를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
     if (displayedRating === 0) {
       alert("별점을 선택해 주세요.");
       return;
     }
 
-    if (createRatingMutation.isPending) {
+    if (createRatingMutation.isPending || updateRatingMutation.isPending) {
       return;
     }
 
+    // 기존 평점이 있으면 수정(PATCH)
     if (myRating) {
-      alert("이미 등록한 평점이 있어요. 평점 수정 기능을 이용해 주세요.");
+      updateRatingMutation.mutate(
+        {
+          ratingId: myRating.ratingId,
+          score: displayedRating,
+          comment: displayedComment,
+        },
+        {
+          onSuccess: () => {
+            alert("평점이 수정되었어요!");
+          },
+          onError: () => {
+            alert("평점 수정에 실패했어요.");
+          },
+        },
+      );
+
       return;
     }
 
+    // 기존 평점이 없으면 등록(POST)
     createRatingMutation.mutate(
       {
         movieId: parsedMovieId,
@@ -317,13 +347,17 @@ export function MovieDetailPage() {
           <button
             type="button"
             onClick={handleRatingSubmit}
-            disabled={createRatingMutation.isPending || Boolean(myRating)}
+            disabled={
+              createRatingMutation.isPending ||
+              updateRatingMutation.isPending ||
+              (Boolean(accessToken) && (isRatingsPending || isRatingsError))
+            }
             className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             {createRatingMutation.isPending
               ? "저장 중..."
               : myRating
-                ? "등록된 평점"
+                ? "평점 수정하기"
                 : "평점 저장"}
           </button>
         </div>
