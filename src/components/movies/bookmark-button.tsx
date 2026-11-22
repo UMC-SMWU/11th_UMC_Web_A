@@ -1,4 +1,6 @@
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useNavigate } from "@tanstack/react-router";
+import { useFavoriteQuery, useFavoritesQuery, useToggleFavoriteMutation } from "../../hooks/use-favorites";
+import { useAuthStore } from "../../stores/auth-store";
 import { cn } from "../../utils/cn";
 
 interface BookmarkButtonProps {
@@ -9,9 +11,26 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ movieId, variant = "icon", className }: BookmarkButtonProps) {
-  // store에서 필요한 값만 골라 써서, 다른 영화의 북마크가 바뀌어도 이 버튼은 다시 그리지 않아요.
-  const isBookmarked = useBookmarkStore((state) => state.bookmarkedMovieIds.includes(movieId));
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const navigate = useNavigate();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  // 상세(text)는 영화 한 개를 조회하고, 목록(icon)은 즐겨찾기 목록 하나를 같이 써서 요청을 줄여요.
+  const detailQuery = useFavoriteQuery(movieId, variant === "text");
+  const listQuery = useFavoritesQuery(variant === "icon");
+  const isBookmarked =
+    variant === "text"
+      ? Boolean(detailQuery.data)
+      : Boolean(listQuery.data?.some((favorite) => favorite.movieId === movieId));
+  const toggleMutation = useToggleFavoriteMutation(movieId);
+
+  const toggleBookmark = () => {
+    if (!accessToken) {
+      alert("로그인 후 이용할 수 있어요.");
+      navigate({ to: "/login" });
+      return;
+    }
+    if (toggleMutation.isPending) return;
+    toggleMutation.mutate(isBookmarked);
+  };
 
   const label = isBookmarked ? "북마크 해제" : "북마크 추가";
   const iconSrc = isBookmarked ? "/icons/bookmark-filled.svg" : "/icons/bookmark-outline.svg";
@@ -26,7 +45,7 @@ export function BookmarkButton({ movieId, variant = "icon", className }: Bookmar
           className,
         )}
         aria-pressed={isBookmarked}
-        onClick={() => toggleBookmark(movieId)}
+        onClick={toggleBookmark}
       >
         <img className="size-4" src={iconSrc} alt="" />
         {label}
@@ -43,7 +62,7 @@ export function BookmarkButton({ movieId, variant = "icon", className }: Bookmar
       )}
       aria-pressed={isBookmarked}
       aria-label={label}
-      onClick={() => toggleBookmark(movieId)}
+      onClick={toggleBookmark}
     >
       {/* 아이콘 버튼 배경이 어두워서, 검정색 outline 아이콘은 invert로 흰색으로 바꿔 보여 줘요. */}
       <img className={cn("size-[18px]", !isBookmarked && "invert")} src={iconSrc} alt="" />

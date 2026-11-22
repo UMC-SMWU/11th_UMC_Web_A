@@ -6,6 +6,8 @@ import {
   inputClass,
   primaryButtonClass,
 } from "../../components/auth/auth-form-parts";
+import { StatusMessage } from "../../components/common/status-message";
+import { useLoginMutation } from "../../hooks/use-login-mutation";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,11 +17,14 @@ export function LoginPage() {
 
   const isEmailValid = EMAIL_REGEX.test(email.trim());
   const showEmailError = email.length > 0 && !isEmailValid;
+  const loginMutation = useLoginMutation();
   const canSubmit = isEmailValid && password.length > 0;
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // 로그인 API 연동은 8주차에서 해요. 이번 주차는 화면만 만들어요.
+    if (!canSubmit || loginMutation.isPending) return;
+
+    loginMutation.mutate({ email: email.trim(), password });
   };
 
   return (
@@ -51,8 +56,14 @@ export function LoginPage() {
           />
         </Field>
 
-        <button type="submit" className={primaryButtonClass} disabled={!canSubmit}>
-          로그인
+        {loginMutation.isError ? (
+          <StatusMessage tone="error" className="py-0">
+            {loginMutation.error.message}
+          </StatusMessage>
+        ) : null}
+
+        <button type="submit" className={primaryButtonClass} disabled={!canSubmit || loginMutation.isPending}>
+          {loginMutation.isPending ? "로그인 중" : "로그인"}
         </button>
       </form>
 

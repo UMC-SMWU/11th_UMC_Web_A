@@ -1,4 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useMeQuery } from "../../hooks/use-me-query";
+import { useAuthStore } from "../../stores/auth-store";
 import { cn } from "../../utils/cn";
 
 const navItemClass = "text-sm font-medium text-subtle md:text-[15px]";
@@ -8,6 +10,8 @@ export function Header() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isMovieActive = pathname === "/" || pathname.startsWith("/movies");
   const isSearchActive = pathname.startsWith("/search");
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useMeQuery();
   const isMyActive = pathname.startsWith("/me");
 
   return (
@@ -50,12 +54,20 @@ export function Header() {
         >
           <img className="size-5" src="/icons/search.svg" alt="" />
         </Link>
-        <Link
-          to="/login"
-          className="flex h-10 items-center rounded-lg bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover"
-        >
-          로그인
-        </Link>
+        {!accessToken ? (
+          <Link
+            to="/login"
+            className="flex h-10 items-center rounded-lg bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover"
+          >
+            로그인
+          </Link>
+        ) : meQuery.isLoading ? (
+          <span className="h-10 w-24 animate-pulse rounded-lg bg-line" />
+        ) : (
+          <Link to="/me" className="text-sm font-bold text-ink">
+            {meQuery.data?.nickname}
+          </Link>
+        )}
       </div>
     </header>
   );

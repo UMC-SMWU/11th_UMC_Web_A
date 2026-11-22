@@ -1,9 +1,11 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { useAuthStore } from "../../stores/auth-store";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import type { TmdbMovieDetail } from "../../api/movies/models";
 import { StatusMessage } from "../../components/common/status-message";
 import { BookmarkButton } from "../../components/movies/bookmark-button";
+import { RatingSection } from "../../components/movies/rating-section";
 import { MoviePoster } from "../../components/movies/movie-poster";
 import { formatReleaseDate, formatRuntime } from "../../utils/movies/format-movie";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
@@ -25,6 +27,7 @@ interface MovieDetailContentProps {
 }
 
 function MovieDetailContent({ movieId }: MovieDetailContentProps) {
+  const isLoggedIn = Boolean(useAuthStore((state) => state.accessToken));
   const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -125,6 +128,7 @@ function MovieDetailContent({ movieId }: MovieDetailContentProps) {
             {movie.overview || "줄거리 정보가 없어요."}
           </p>
           <BookmarkButton movieId={movie.id} variant="text" className="mt-4 self-start" />
+          {isLoggedIn ? <RatingSection movieId={movie.id} /> : null}
         </div>
       </div>
     </main>
