@@ -66,6 +66,10 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(409)
                         .body(ApiResponse.failure("MEMBER4092", "이미 사용 중인 닉네임입니다."));
             }
+            if (detail.contains("uk_favorite_member_movie")) {
+                return ResponseEntity.status(409)
+                        .body(ApiResponse.failure("FAVORITE409_1", "이미 이 영화를 즐겨찾기하셨습니다."));
+            }
             if (detail.contains("uk_rating_member_movie")) {
                 return ResponseEntity.status(409)
                         .body(ApiResponse.failure("COMMON4092", "이미 이 영화에 평점을 남기셨습니다."));
