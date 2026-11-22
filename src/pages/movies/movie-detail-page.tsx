@@ -13,6 +13,7 @@ import { getMemberIdFromToken } from "@/utils/get-member-id-from-token";
 import { useMemberRatingsQuery } from "@/hooks/use-member-ratings-query";
 import { useCreateRatingMutation } from "@/hooks/use-create-rating-mutation";
 import { useUpdateRatingMutation } from "@/hooks/use-update-rating-mutation";
+import { useDeleteRatingMutation } from "@/hooks/use-delete-rating-mutation";
 
 export function MovieDetailPage() {
   const [rating, setRating] = useState<number | null>(null);
@@ -50,6 +51,7 @@ export function MovieDetailPage() {
 
   const createRatingMutation = useCreateRatingMutation();
   const updateRatingMutation = useUpdateRatingMutation();
+  const deleteRatingMutation = useDeleteRatingMutation();
 
   const {
     data: favoriteData,
@@ -123,7 +125,11 @@ export function MovieDetailPage() {
       return;
     }
 
-    if (createRatingMutation.isPending || updateRatingMutation.isPending) {
+    if (
+      createRatingMutation.isPending ||
+      updateRatingMutation.isPending ||
+      deleteRatingMutation.isPending
+    ) {
       return;
     }
 
@@ -164,6 +170,37 @@ export function MovieDetailPage() {
         },
       },
     );
+  };
+
+  const handleRatingDelete = () => {
+    if (!myRating) {
+      return;
+    }
+
+    if (
+      createRatingMutation.isPending ||
+      updateRatingMutation.isPending ||
+      deleteRatingMutation.isPending
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm("정말 평점을 삭제하시겠어요?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteRatingMutation.mutate(myRating.ratingId, {
+      onSuccess: () => {
+        setRating(null);
+        setComment(null);
+        alert("평점이 삭제되었어요!");
+      },
+      onError: () => {
+        alert("평점 삭제에 실패했어요.");
+      },
+    });
   };
 
   if (!isValidMovieId) {
@@ -350,16 +387,32 @@ export function MovieDetailPage() {
             disabled={
               createRatingMutation.isPending ||
               updateRatingMutation.isPending ||
+              deleteRatingMutation.isPending ||
               (Boolean(accessToken) && (isRatingsPending || isRatingsError))
             }
             className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {createRatingMutation.isPending
+            {createRatingMutation.isPending || updateRatingMutation.isPending
               ? "저장 중..."
               : myRating
                 ? "평점 수정하기"
                 : "평점 저장"}
           </button>
+
+          {myRating && (
+            <button
+              type="button"
+              onClick={handleRatingDelete}
+              disabled={
+                createRatingMutation.isPending ||
+                updateRatingMutation.isPending ||
+                deleteRatingMutation.isPending
+              }
+              className="mt-2 w-full rounded-md border border-red-300 bg-white py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {deleteRatingMutation.isPending ? "삭제 중..." : "평점 삭제"}
+            </button>
+          )}
         </div>
       </section>
     </main>
