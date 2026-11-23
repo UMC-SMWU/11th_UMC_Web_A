@@ -1,4 +1,6 @@
-import { Link, useParams } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
@@ -19,8 +21,11 @@ function formatRuntime(runtime: number | null) {
   return `${hours}시간 ${minutes}분`;
 }
 
-export function MovieDetailPage() {
-  const { movieId } = useParams({ from: "/movies/$movieId" });
+interface MovieDetailPageProps {
+  movieId: string;
+}
+
+export function MovieDetailPage({ movieId }: MovieDetailPageProps) {
 
   const parsedMovieId = Number(movieId);
   const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
@@ -96,7 +101,7 @@ export function MovieDetailPage() {
       <div className="absolute inset-0 bg-black/70" />
 
       <div className="relative flex flex-col gap-8 px-20 py-10 text-white">
-        <Link to="/" className="w-fit text-sm font-bold text-white/80 hover:text-white">
+        <Link href="/" className="w-fit text-sm font-bold text-white/80 hover:text-white">
           ← 영화 목록
         </Link>
 

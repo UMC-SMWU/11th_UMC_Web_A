@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { useToggleFavoriteMutation } from "../hooks/use-favorites";
 import { useAuthStore } from "../stores/auth-store";
 import { cn } from "../utils/cn";
@@ -16,14 +16,14 @@ export function BookmarkButton({
   isBookmarked,
   className,
 }: BookmarkButtonProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
   const toggleFavoriteMutation = useToggleFavoriteMutation();
 
   const handleClick = () => {
     if (!accessToken) {
       alert("로그인 후 즐겨찾기할 수 있어요.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
     if (toggleFavoriteMutation.isPending) return;

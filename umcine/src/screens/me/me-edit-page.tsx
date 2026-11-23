@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";

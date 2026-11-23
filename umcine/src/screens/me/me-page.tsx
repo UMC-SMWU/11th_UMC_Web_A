@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import type { TmdbMovieListItem } from "../../api/movies/models";
@@ -58,7 +60,7 @@ export function MePage() {
       <div className="flex items-center justify-between pb-7">
         <h1 className="text-[32px] font-bold text-ink">내 정보</h1>
         <Link
-          to="/me/edit"
+          href="/me/edit"
           className="flex h-[42px] items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-white"
         >
           정보 수정

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import type { Rating } from "../../api/ratings/ratings";
 import {
   useCreateRatingMutation,
@@ -30,7 +30,7 @@ export function RatingSection({ movieId }: { movieId: number }) {
       <section className={sectionClass}>
         <p className="text-sm text-white/80">
           로그인하면 평점을 남길 수 있어요.{" "}
-          <Link to="/login" className="font-bold text-white underline">
+          <Link href="/login" className="font-bold text-white underline">
             로그인
           </Link>
         </p>

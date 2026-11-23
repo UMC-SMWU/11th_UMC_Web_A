@@ -1,4 +1,7 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/search-movies";
@@ -7,9 +10,12 @@ import { BookmarkButton } from "../../components/bookmark-button";
 import { useFavoritesQuery } from "../../hooks/use-favorites";
 import { useAuthStore } from "../../stores/auth-store";
 
-export function SearchPage() {
-  const { query } = useSearch({ from: "/search" });
-  const navigate = useNavigate({ from: "/search" });
+interface SearchPageProps {
+  query?: string;
+}
+
+export function SearchPage({ query }: SearchPageProps) {
+  const router = useRouter();
   const [searchText, setSearchText] = useState(query ?? "");
   const [prevQuery, setPrevQuery] = useState(query);
 
@@ -38,9 +44,7 @@ export function SearchPage() {
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextQuery = searchText.trim();
-    navigate({
-      search: nextQuery ? { query: nextQuery } : {},
-    });
+    router.push(nextQuery ? `/search?query=${encodeURIComponent(nextQuery)}` : "/search");
   }
 
   return (
@@ -104,8 +108,7 @@ export function SearchPage() {
                     <p className="text-xs text-muted">{movie.release_date}</p>
                     <p className="mt-2 line-clamp-2 text-sm text-sub">{movie.overview}</p>
                     <Link
-                      to="/movies/$movieId"
-                      params={{ movieId: String(movie.id) }}
+                      href={`/movies/${movie.id}`}
                       className="mt-auto w-fit text-sm font-bold text-primary"
                     >
                       상세 보기 →
