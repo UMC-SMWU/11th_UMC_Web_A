@@ -1,39 +1,69 @@
 import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";
-
-// 8주차에서 내 정보 조회 API로 교체
-const MOCK_ME = {
-  nickname: "gs0428",
-  email: "gwangsoo@cinemalab.kr",
-};
+import { getMe, type MemberInfo } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
+import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const mainClass =
+  "mx-auto flex min-h-[calc(100vh-91px)] w-full max-w-[1440px] flex-col px-20 pt-6 pb-7";
 const inputClass =
   "h-12 w-full rounded-lg border bg-white px-4 text-[15px] text-ink outline-none transition placeholder:text-muted";
 const labelClass = "mb-2 block text-sm font-bold text-ink";
 
 export function MeEditPage() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  if (meQuery.isLoading) {
+    return (
+      <main className={mainClass}>
+        <p className="text-sm text-sub">내 정보를 불러오는 중이에요.</p>
+      </main>
+    );
+  }
+
+  if (!meQuery.data) {
+    return (
+      <main className={mainClass}>
+        <p className="text-sm text-sub">내 정보를 불러오지 못했어요.</p>
+      </main>
+    );
+  }
+
+  // 데이터가 준비된 뒤에 폼을 그려야 닉네임 초깃값이 제대로 들어감
+  return <MeEditForm me={meQuery.data} />;
+}
+
+function MeEditForm({ me }: { me: MemberInfo }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [nickname, setNickname] = useState(MOCK_ME.nickname);
+  const [nickname, setNickname] = useState(me.nickname);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [nicknameCheck, setNicknameCheck] = useState({
     isChecking: false,
     isAvailable: false,
   });
+  const updateMeMutation = useUpdateMeMutation();
 
   const trimmedNickname = nickname.trim();
   const isNicknameValid =
     trimmedNickname.length >= 2 && trimmedNickname.length <= 12;
-  const isNicknameChanged = trimmedNickname !== MOCK_ME.nickname;
+  const isNicknameChanged = trimmedNickname !== me.nickname;
   const showNicknameError = nickname.length > 0 && !isNicknameValid;
 
-  // 닉네임을 바꿨다면 중복 확인까지 통과해야 저장 가능
-  const isNicknameReady =
-    !isNicknameChanged || (isNicknameValid && nicknameCheck.isAvailable);
+  // 닉네임을 바꾸고, 형식이 맞고, 중복 확인까지 통과해야 저장 가능
   const canSave =
-    (isNicknameChanged || previewUrl !== null) &&
-    isNicknameReady &&
+    isNicknameChanged &&
+    isNicknameValid &&
+    nicknameCheck.isAvailable &&
     !nicknameCheck.isChecking;
 
   const handleChangeNickname = (value: string) => {
@@ -77,10 +107,11 @@ export function MeEditPage() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleSave = () => {
-    if (!canSave) return;
-    // 8주차에서 내 정보 수정 API 연결
-    alert("변경사항 저장은 8주차에서 API와 연결해요.");
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSave || updateMeMutation.isPending) return;
+
+    updateMeMutation.mutate({ nickname: trimmedNickname });
   };
 
   const handleWithdraw = () => {
@@ -89,138 +120,139 @@ export function MeEditPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-91px)] w-full max-w-[1440px] flex-col px-20 pt-6 pb-7">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-[32px] font-bold text-ink">내 정보 수정</h1>
-          <p className="mt-2 text-sm text-sub">
-            닉네임과 프로필 이미지만 변경할 수 있어요.
-          </p>
-        </div>
-        <button
-          type="button"
-          disabled={!canSave}
-          onClick={handleSave}
-          className="mt-3 flex h-[42px] items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted"
-        >
-          변경사항 저장
-        </button>
-      </div>
-
-      <div className="mt-9 grid grid-cols-2">
-        {/* 프로필 이미지 */}
-        <div className="flex flex-col items-center pt-3">
+    <main className={mainClass}>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-1 flex-col">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-[32px] font-bold text-ink">내 정보 수정</h1>
+            <p className="mt-2 text-sm text-sub">
+              닉네임과 프로필 이미지만 변경할 수 있어요.
+            </p>
+          </div>
           <button
-            type="button"
-            aria-label="프로필 이미지 변경"
-            onClick={() => fileInputRef.current?.click()}
-            className="relative size-[82px]"
+            type="submit"
+            disabled={!canSave || updateMeMutation.isPending}
+            className="mt-3 flex h-[42px] items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted"
           >
-            <span className="flex size-full items-center justify-center overflow-hidden rounded-full bg-line">
-              {previewUrl ? (
+            {updateMeMutation.isPending ? "저장 중" : "변경사항 저장"}
+          </button>
+        </div>
+
+        <div className="mt-9 grid grid-cols-2">
+          {/* 프로필 이미지 */}
+          <div className="flex flex-col items-center pt-3">
+            <button
+              type="button"
+              aria-label="프로필 이미지 변경"
+              onClick={() => fileInputRef.current?.click()}
+              className="relative size-[82px]"
+            >
+              <span className="flex size-full items-center justify-center overflow-hidden rounded-full bg-line">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="프로필 이미지 미리보기"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src="/icons/movie-icons/person.svg"
+                    alt=""
+                    aria-hidden="true"
+                    className="size-12"
+                  />
+                )}
+              </span>
+              <span className="absolute -right-1 -bottom-1 rounded-full bg-white">
                 <img
-                  src={previewUrl}
-                  alt="프로필 이미지 미리보기"
-                  className="size-full object-cover"
-                />
-              ) : (
-                <img
-                  src="/icons/movie-icons/person.svg"
+                  src="/icons/movie-icons/edit.svg"
                   alt=""
                   aria-hidden="true"
-                  className="size-12"
+                  className="size-6"
                 />
-              )}
-            </span>
-            <span className="absolute -right-1 -bottom-1 rounded-full bg-white">
-              <img
-                src="/icons/movie-icons/edit.svg"
-                alt=""
-                aria-hidden="true"
-                className="size-6"
-              />
-            </span>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleChangeImage}
-            className="hidden"
-          />
-          <p className="mt-2 text-sm font-bold text-ink">프로필 이미지</p>
-          <p className="mt-1 text-[11px] text-muted">선택 사항 · 최대 5MB</p>
-        </div>
-
-        {/* 닉네임, 이메일 */}
-        <div className="flex flex-col gap-4">
-          <div>
-            <label htmlFor="nickname" className={labelClass}>
-              닉네임
-            </label>
-            <div className="relative">
-              <input
-                id="nickname"
-                placeholder="2~12자"
-                value={nickname}
-                disabled={nicknameCheck.isChecking}
-                onChange={(e) => handleChangeNickname(e.target.value)}
-                className={`${inputClass} pr-24 ${
-                  showNicknameError
-                    ? "border-red-500"
-                    : "border-line focus:border-primary"
-                }`}
-              />
-              <button
-                type="button"
-                disabled={
-                  !isNicknameValid || !isNicknameChanged || nicknameCheck.isChecking
-                }
-                onClick={handleCheckNickname}
-                className="absolute top-1/2 right-4 -translate-y-1/2 text-[13px] font-bold text-primary disabled:text-muted"
-              >
-                {nicknameCheck.isChecking ? "확인 중" : "중복 확인"}
-              </button>
-            </div>
-            {showNicknameError && (
-              <p className="mt-1.5 text-xs text-red-500">
-                닉네임은 2~12자로 입력해 주세요.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="email" className={labelClass}>
-              이메일
-            </label>
-            {/* 이메일은 변경할 수 없어 읽기 전용 */}
+              </span>
+            </button>
             <input
-              id="email"
-              type="email"
-              value={MOCK_ME.email}
-              readOnly
-              className={`${inputClass} border-line`}
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleChangeImage}
+              className="hidden"
             />
+            <p className="mt-2 text-sm font-bold text-ink">프로필 이미지</p>
+            <p className="mt-1 text-[11px] text-muted">선택 사항 · 최대 5MB</p>
+          </div>
+
+          {/* 닉네임, 이메일 */}
+          <div className="flex flex-col gap-4">
+            <div>
+              <label htmlFor="nickname" className={labelClass}>
+                닉네임
+              </label>
+              <div className="relative">
+                <input
+                  id="nickname"
+                  placeholder="2~12자"
+                  value={nickname}
+                  disabled={nicknameCheck.isChecking || updateMeMutation.isPending}
+                  onChange={(e) => handleChangeNickname(e.target.value)}
+                  className={`${inputClass} pr-24 ${
+                    showNicknameError
+                      ? "border-red-500"
+                      : "border-line focus:border-primary"
+                  }`}
+                />
+                <button
+                  type="button"
+                  disabled={
+                    !isNicknameValid || !isNicknameChanged || nicknameCheck.isChecking
+                  }
+                  onClick={handleCheckNickname}
+                  className="absolute top-1/2 right-4 -translate-y-1/2 text-[13px] font-bold text-primary disabled:text-muted"
+                >
+                  {nicknameCheck.isChecking ? "확인 중" : "중복 확인"}
+                </button>
+              </div>
+              {showNicknameError && (
+                <p className="mt-1.5 text-xs text-red-500">
+                  닉네임은 2~12자로 입력해 주세요.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="email" className={labelClass}>
+                이메일
+              </label>
+              {/* 이메일은 변경할 수 없어 읽기 전용 */}
+              <input
+                id="email"
+                type="email"
+                value={me.email}
+                readOnly
+                className={`${inputClass} border-line`}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 회원 탈퇴 */}
-      <section className="mt-auto flex items-center justify-between rounded-[10px] border border-danger bg-danger/10 px-5 py-5">
-        <div>
-          <h2 className="text-sm font-bold text-danger">회원 탈퇴</h2>
-          <p className="mt-1.5 text-[11px] text-danger">
-            탈퇴하면 작성한 평점, 후기와 즐겨찾기가 모두 삭제되며 복구할 수 없습니다.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleWithdraw}
-          className="flex h-[42px] items-center rounded-lg border border-danger bg-white px-4 text-sm font-extrabold text-danger"
-        >
-          회원 탈퇴
-        </button>
-      </section>
+        {/* 회원 탈퇴 */}
+        <section className="mt-auto flex items-center justify-between rounded-[10px] border border-danger bg-danger/10 px-5 py-5">
+          <div>
+            <h2 className="text-sm font-bold text-danger">회원 탈퇴</h2>
+            <p className="mt-1.5 text-[11px] text-danger">
+              탈퇴하면 작성한 평점, 후기와 즐겨찾기가 모두 삭제되며 복구할 수 없습니다.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleWithdraw}
+            className="flex h-[42px] items-center rounded-lg border border-danger bg-white px-4 text-sm font-extrabold text-danger"
+          >
+            회원 탈퇴
+          </button>
+        </section>
+      </form>
     </main>
   );
 }

@@ -5,20 +5,19 @@ import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { MovieGrid } from "../../components/movies/movie-grid";
 import { Pagination } from "../../components/movies/pagination";
-import { useBookmarkStore } from "../../stores/bookmark-store";
-
-// 8주차에서 내 정보 조회 API로 교체
-const MOCK_ME = {
-  nickname: "gs0428",
-  email: "gwangsoo@cinemalab.kr",
-};
+import { useFavoritesQuery } from "../../hooks/use-favorites";
+import { useMeQuery } from "../../hooks/use-me-query";
 
 // 5개씩 2줄
 const BOOKMARKS_PER_PAGE = 10;
 
 export function MePage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
+  const meQuery = useMeQuery();
+  const favoritesQuery = useFavoritesQuery();
+
+  const bookmarkedMovieIds =
+    favoritesQuery.data?.map((favorite) => favorite.movieId) ?? [];
 
   const totalPages = Math.max(
     1,
@@ -51,8 +50,8 @@ export function MePage() {
   );
 
   // 아직 한 편도 불러오지 못했을 때만 로딩 문구 표시
-const isPending =
-  movies.length === 0 && movieQueries.some((query) => query.isPending);
+  const isMoviesPending =
+    movies.length === 0 && movieQueries.some((query) => query.isPending);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-20 pt-6 pb-16">
@@ -82,13 +81,13 @@ const isPending =
             <div>
               <dt className="text-[11px] text-muted">닉네임</dt>
               <dd className="mt-1.5 text-[15px] font-bold text-ink">
-                {MOCK_ME.nickname}
+                {meQuery.data?.nickname ?? "-"}
               </dd>
             </div>
             <div>
               <dt className="text-[11px] text-muted">이메일</dt>
               <dd className="mt-1.5 text-[15px] font-bold text-ink">
-                {MOCK_ME.email}
+                {meQuery.data?.email ?? "-"}
               </dd>
             </div>
           </dl>
@@ -98,9 +97,13 @@ const isPending =
       <section className="pt-8">
         <h2 className="mb-4 text-base font-bold text-ink">내 즐겨찾기</h2>
 
-        {bookmarkedMovieIds.length === 0 ? (
+        {favoritesQuery.isLoading ? (
+          <p className="text-sm text-sub">즐겨찾기 목록을 불러오는 중이에요.</p>
+        ) : favoritesQuery.isError ? (
+          <p className="text-sm text-sub">즐겨찾기 목록을 불러오지 못했어요.</p>
+        ) : bookmarkedMovieIds.length === 0 ? (
           <p className="text-sm text-sub">즐겨찾기한 영화가 없어요.</p>
-        ) : isPending ? (
+        ) : isMoviesPending ? (
           <p className="text-sm text-sub">즐겨찾기한 영화를 불러오는 중이에요.</p>
         ) : (
           <div className="flex flex-col gap-10">

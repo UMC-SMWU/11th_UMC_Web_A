@@ -4,6 +4,9 @@ import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
 import { BookmarkButton } from "../../components/bookmark-button";
+import { RatingSection } from "../../components/movies/rating-section";
+import { useFavoriteStatusQuery } from "../../hooks/use-favorites";
+import { useAuthStore } from "../../stores/auth-store";
 
 function formatRuntime(runtime: number | null) {
   if (!runtime) return "상영 시간 정보가 없어요.";
@@ -29,6 +32,12 @@ export function MovieDetailPage() {
     enabled: isValidMovieId,
     staleTime: 30 * 1000,
   });
+
+  // 이 영화가 내 즐겨찾기인지 (로그인했을 때만 요청)
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const favoriteStatusQuery = useFavoriteStatusQuery(parsedMovieId);
+  const isBookmarked =
+    Boolean(accessToken) && (favoriteStatusQuery.data?.isFavorite ?? false);
 
   // 번호 오류 → 로딩 → 에러 순서로 확인해요.
   if (!isValidMovieId) {
@@ -106,7 +115,11 @@ export function MovieDetailPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-4">
               <h1 className="text-4xl font-black">{movie.title}</h1>
-              <BookmarkButton movieId={movie.id} movieTitle={movie.title} />
+              <BookmarkButton
+                movieId={movie.id}
+                movieTitle={movie.title}
+                isBookmarked={isBookmarked}
+              />
             </div>
             <p className="text-lg text-white/70">{movie.original_title}</p>
             <p className="text-sm text-white/70">{metaText}</p>
@@ -114,6 +127,8 @@ export function MovieDetailPage() {
               <h2 className="mt-6 text-xl font-bold">{movie.tagline}</h2>
             )}
             <p className="max-w-[640px] leading-7 text-white/90">{movie.overview}</p>
+
+            <RatingSection movieId={movie.id} />
           </div>
         </div>
       </div>
