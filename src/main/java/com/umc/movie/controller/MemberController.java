@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,7 +49,20 @@ public class MemberController {
                     ));
         }
     }
-
+    @Operation(
+            summary = "내 정보 조회",
+            description = "로그인한 회원의 정보를 조회합니다. JWT 토큰이 필요합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "회원 정보 조회 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패"
+            )
+    })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -71,7 +87,24 @@ public class MemberController {
     ) {
         return memberService.checkEmail(email);
     }
-
+    @Operation(
+            summary = "내 정보 수정",
+            description = "로그인한 회원의 정보를 수정합니다. JWT 토큰이 필요합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "회원 정보 수정 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 입력값"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패"
+            )
+    })
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,

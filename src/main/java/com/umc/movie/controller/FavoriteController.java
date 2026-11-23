@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+
 import java.util.List;
 
 @RestController
@@ -81,7 +82,20 @@ public class FavoriteController {
         return ResponseEntity.status(201)
                 .body(ApiResponse.created("즐겨찾기를 등록했습니다.", response));
     }
-
+    @Operation(
+            summary = "내 즐겨찾기 조회",
+            description = "로그인한 회원이 즐겨찾기한 영화 목록을 조회합니다. JWT 토큰이 필요합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "즐겨찾기 목록 조회 성공 (COMMON200)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (AUTH401_2)"
+            )
+    })
     @GetMapping("/favorites")
     public ResponseEntity<ApiResponse<List<FavoriteResponse>>> getMyFavorites(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -90,6 +104,20 @@ public class FavoriteController {
         return ResponseEntity.ok(ApiResponse.ok("내 즐겨찾기 목록을 조회했습니다.", response));
     }
 
+    @Operation(
+            summary = "즐겨찾기 여부 조회",
+            description = "해당 영화를 즐겨찾기했는지 확인합니다. JWT 토큰이 필요합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "즐겨찾기 여부 조회 성공 (COMMON200)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (AUTH401_2)"
+            )
+    })
     @GetMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<FavoriteStatusResponse>> getStatus(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -98,6 +126,21 @@ public class FavoriteController {
         FavoriteStatusResponse response = favoriteService.getStatus(memberId, movieId);
         return ResponseEntity.ok(ApiResponse.ok("즐겨찾기 여부를 조회했습니다.", response));
     }
+
+    @Operation(
+            summary = "즐겨찾기 해제",
+            description = "로그인한 회원의 영화 즐겨찾기를 해제합니다. JWT 토큰이 필요합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "즐겨찾기 해제 성공 (COMMON200)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (AUTH401_2)"
+            )
+    })
 
     @DeleteMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<Void>> delete(
