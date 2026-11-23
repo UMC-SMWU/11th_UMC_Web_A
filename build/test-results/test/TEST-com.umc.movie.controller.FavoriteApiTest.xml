@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.umc.movie.controller.FavoriteApiTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-23T16:29:47.838Z" hostname="WIN-V3PBI71QIA6" time="1.776">
+  <properties/>
+  <testcase name="이미 즐겨찾기한 영화를 다시 등록하면 409와 FAVORITE409_1을 응답한다" classname="com.umc.movie.controller.FavoriteApiTest" time="0.661"/>
+  <testcase name="즐겨찾기하지 않은 영화의 여부를 조회하면 200과 isFavorite false를 응답한다" classname="com.umc.movie.controller.FavoriteApiTest" time="0.012"/>
+  <testcase name="토큰 없이 즐겨찾기를 등록하면 401과 AUTH401_2를 응답한다" classname="com.umc.movie.controller.FavoriteApiTest" time="0.008"/>
+  <testcase name="Swagger 문서 경로는 토큰 없이도 열려 있다" classname="com.umc.movie.controller.FavoriteApiTest" time="0.405"/>
+  <testcase name="토큰을 담아 즐겨찾기를 등록하면 201과 저장된 영화 ID를 응답한다" classname="com.umc.movie.controller.FavoriteApiTest" time="0.027"/>
+  <system-out><![CDATA[2026-11-24T01:29:47.841+09:00  INFO 3100 --- [movie] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.umc.movie.controller.FavoriteApiTest]: FavoriteApiTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:29:47.863+09:00  INFO 3100 --- [movie] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.umc.movie.MovieApplication for test class com.umc.movie.controller.FavoriteApiTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.0)
+
+2026-11-24T01:29:47.903+09:00  INFO 3100 --- [movie] [    Test worker] c.umc.movie.controller.FavoriteApiTest   : Starting FavoriteApiTest using Java 21.0.12.1 with PID 3100 (started by cuteg in C:\UMC\11th_study\backend\study)
+2026-11-24T01:29:47.903+09:00  INFO 3100 --- [movie] [    Test worker] c.umc.movie.controller.FavoriteApiTest   : The following 1 profile is active: "test"
+2026-11-24T01:29:48.144+09:00  INFO 3100 --- [movie] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-24T01:29:48.161+09:00  INFO 3100 --- [movie] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 15 ms. Found 3 JPA repository interfaces.
+2026-11-24T01:29:48.228+09:00  INFO 3100 --- [movie] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-24T01:29:48.232+09:00  INFO 3100 --- [movie] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-24T01:29:48.242+09:00  INFO 3100 --- [movie] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-24T01:29:48.244+09:00  INFO 3100 --- [movie] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-11-24T01:29:48.246+09:00  INFO 3100 --- [movie] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:umc_movie user=SA
+2026-11-24T01:29:48.246+09:00  INFO 3100 --- [movie] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-11-24T01:29:48.247+09:00  INFO 3100 --- [movie] [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-24T01:29:48.290+09:00  INFO 3100 --- [movie] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-24T01:29:48.301+09:00  INFO 3100 --- [movie] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-24T01:29:48.479+09:00  INFO 3100 --- [movie] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T01:29:48.480+09:00  INFO 3100 --- [movie] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T01:29:48.482+09:00  INFO 3100 --- [movie] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-24T01:29:48.494+09:00  INFO 3100 --- [movie] [    Test worker] c.umc.movie.controller.FavoriteApiTest   : Started FavoriteApiTest in 0.626 seconds (process running for 7.541)
+2026-11-24T01:29:49.549+09:00  INFO 3100 --- [movie] [    Test worker] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 357 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
