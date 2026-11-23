@@ -1,9 +1,5 @@
 import { useState } from "react";
-//import type { SubmitEvent } from "react";
 import { Link } from "@tanstack/react-router";
-//import { useNavigate } from "@tanstack/react-router";
-//import { login } from "../../api/members/login";
-//import { useAuthStore } from "../../stores/auth-store";
 import { useLoginMutation } from "../../hooks/use-login-mutation";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,7 +18,6 @@ const iconClass =
   "pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]";
 
 export function LoginPage() {
-  //const navigate = useNavigate();
   const [form, setForm] = useState(DEFAULT_FORM);
   //const [isSubmitting, setIsSubmitting] = useState(false);
   //const setAccessToken = useAuthStore((state) => state.setAccessToken);
