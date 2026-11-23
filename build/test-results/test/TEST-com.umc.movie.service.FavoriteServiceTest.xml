@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.umc.movie.service.FavoriteServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-23T16:53:57.183Z" hostname="WIN-V3PBI71QIA6" time="0.489">
+<testsuite name="com.umc.movie.service.FavoriteServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-23T17:24:24.153Z" hostname="WIN-V3PBI71QIA6" time="0.675">
   <properties/>
-  <testcase name="이미 즐겨찾기한 영화면 FAVORITE409_1 예외를 던지고 저장하지 않는다" classname="com.umc.movie.service.FavoriteServiceTest" time="0.479"/>
-  <testcase name="아직 즐겨찾기하지 않은 영화면 즐겨찾기를 저장한다" classname="com.umc.movie.service.FavoriteServiceTest" time="0.009"/>
+  <testcase name="이미 즐겨찾기한 영화면 FAVORITE409_1 예외를 던지고 저장하지 않는다" classname="com.umc.movie.service.FavoriteServiceTest" time="0.662"/>
+  <testcase name="아직 즐겨찾기하지 않은 영화면 즐겨찾기를 저장한다" classname="com.umc.movie.service.FavoriteServiceTest" time="0.011"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
