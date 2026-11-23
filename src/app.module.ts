@@ -8,30 +8,27 @@ import { databaseProviders } from './database.provider.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
-import { AuthController } from './controller/auth.controller.js';
-import { AuthService } from './service/auth.service.js';
+// 인증
+import { AuthController } from './auth/auth.controller.js';
+import { AuthService } from './auth/auth.service.js';
 
+// 회원 Entity
 import { Member } from './members/entities/member.entity.js';
 
-import { BooksModule } from './books/books.module.js';
-
-import { RentalController } from './rentals/rental.controller.js';
-import { RentalService } from './rentals/rental.service.js';
-import { RentalRepository } from './rentals/rental.repository.js';
-
+// 도메인별 Module
 import { MembersModule } from './members/members.module.js';
 import { RatingsModule } from './ratings/ratings.module.js';
-
-// 8주차 추가
 import { FavoritesModule } from './favorites/favorites.module.js';
 import { MovieRecordsModule } from './movie-records/movie-records.module.js';
 
 @Module({
   imports: [
+    // 환경변수 설정
     ConfigModule.forRoot({
       isGlobal: true,
     }),
 
+    // MySQL 연결
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -46,6 +43,7 @@ import { MovieRecordsModule } from './movie-records/movie-records.module.js';
       }),
     }),
 
+    // JWT 인증
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -61,24 +59,16 @@ import { MovieRecordsModule } from './movie-records/movie-records.module.js';
 
     TypeOrmModule.forFeature([Member]),
 
-    BooksModule,
+    // 영화 서비스 도메인
     MembersModule,
     RatingsModule,
-
-    // 8주차 추가
     FavoritesModule,
     MovieRecordsModule,
   ],
 
-  controllers: [AppController, RentalController, AuthController],
+  controllers: [AppController, AuthController],
 
-  providers: [
-    ...databaseProviders,
-    AppService,
-    RentalService,
-    RentalRepository,
-    AuthService,
-  ],
+  providers: [...databaseProviders, AppService, AuthService],
 
   exports: [...databaseProviders],
 })

@@ -1,26 +1,34 @@
-// src/service/rating.service.ts
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { Member } from '../members/entities/member.entity.js';
-import { Rating } from '../ratings/entities/rating.entity.js';
-import { CreateRatingDto } from '../dto/create-rating.dto.js';
-import { UpdateRatingDto } from '../dto/update-rating.dto.js';
-import { RatingResponseDto } from '../dto/rating-response.dto.js';
-import { ApiException } from '../exception/api.exception.js';
+import { Rating } from './entities/rating.entity.js';
+
+import { CreateRatingDto } from './dto/create-rating.dto.js';
+import { UpdateRatingDto } from './dto/update-rating.dto.js';
+import { ApiException } from '../common/exception/api.exception.js';
 
 @Injectable()
 export class RatingService {
   constructor(
     @InjectRepository(Rating)
     private readonly ratingRepository: Repository<Rating>,
+
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
   ) {}
 
-  // 5주차에 만든 조회입니다. 예외만 ApiException으로 바꿨습니다.
-  async getRatingsByMember(memberId: number): Promise<RatingResponseDto[]> {
-    const member = await this.memberRepository.findOneBy({ memberId });
+  // ========================================
+  // 1. 회원별 평점 조회 (공개 API)
+  // GET /members/:memberId/ratings
+  // ========================================
+
+  async getRatingsByMember(memberId: number) {
+    const member = await this.memberRepository.findOneBy({
+      memberId,
+    });
+
     if (!member) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -30,18 +38,30 @@ export class RatingService {
     }
 
     const ratings = await this.ratingRepository.find({
-      where: { member: { memberId } },
+      where: {
+        member: { memberId },
+      },
       order: { ratingId: 'DESC' },
     });
 
-    return ratings.map(RatingResponseDto.from);
+    return ratings.map((rating) => ({
+      ratingId: rating.ratingId,
+      movieId: rating.movieId,
+      score: rating.score,
+      comment: rating.comment,
+    }));
   }
 
-  async create(
-    memberId: number,
-    dto: CreateRatingDto,
-  ): Promise<RatingResponseDto> {
-    const member = await this.memberRepository.findOneBy({ memberId });
+  // ========================================
+  // 2. 평점 등록 (JWT 인증)
+  // POST /ratings
+  // ========================================
+
+  async create(memberId: number, dto: CreateRatingDto) {
+    const member = await this.memberRepository.findOneBy({
+      memberId,
+    });
+
     if (!member) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -50,9 +70,14 @@ export class RatingService {
       );
     }
 
+    // 동일한 영화에 평점을 등록했는지 확인
     const existing = await this.ratingRepository.findOne({
-      where: { member: { memberId }, movieId: dto.movieId },
+      where: {
+        member: { memberId },
+        movieId: dto.movieId,
+      },
     });
+
     if (existing) {
       throw new ApiException(
         HttpStatus.CONFLICT,
@@ -61,6 +86,7 @@ export class RatingService {
       );
     }
 
+    // 평점 생성 및 저장
     const saved = await this.ratingRepository.save(
       this.ratingRepository.create({
         member,
@@ -70,22 +96,30 @@ export class RatingService {
       }),
     );
 
-    return RatingResponseDto.from(saved);
+    // ratingId뿐 아니라 평점 정보 전체 반환
+    return this.toRatingResponse(saved);
   }
 
-  async update(
-    memberId: number,
-    ratingId: number,
-    dto: UpdateRatingDto,
-  ): Promise<RatingResponseDto> {
+  // ========================================
+  // 3. 평점 수정 (JWT 인증 + 소유권 검증)
+  // PATCH /ratings/:ratingId
+  // ========================================
+
+  async update(memberId: number, ratingId: number, dto: UpdateRatingDto) {
     const rating = await this.findOwnedRating(memberId, ratingId);
 
     rating.score = dto.score;
     rating.comment = dto.comment ?? null;
 
     const saved = await this.ratingRepository.save(rating);
-    return RatingResponseDto.from(saved);
+
+    return this.toRatingResponse(saved);
   }
+
+  // ========================================
+  // 4. 평점 삭제 (JWT 인증 + 소유권 검증)
+  // DELETE /ratings/:ratingId
+  // ========================================
 
   async delete(memberId: number, ratingId: number): Promise<void> {
     const rating = await this.findOwnedRating(memberId, ratingId);
@@ -93,19 +127,20 @@ export class RatingService {
     await this.ratingRepository.remove(rating);
   }
 
-  /**
-   * 평점을 찾고 그 평점이 요청자의 것인지까지 확인합니다.
-   * 수정과 삭제가 똑같은 검사를 하므로 메서드로 묶었습니다.
-   */
+  // ========================================
+  // 5. 평점 소유권 검증
+  // ========================================
+
   private async findOwnedRating(
     memberId: number,
     ratingId: number,
   ): Promise<Rating> {
     const rating = await this.ratingRepository.findOne({
       where: { ratingId },
-      relations: { member: true }, // 작성자를 함께 불러와야 소유권을 비교할 수 있습니다
+      relations: { member: true },
     });
 
+    // 평점이 존재하지 않는 경우
     if (!rating) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -114,7 +149,7 @@ export class RatingService {
       );
     }
 
-    // 존재는 하지만 내 것이 아니라면 인가 실패입니다
+    // 다른 회원이 작성한 평점인 경우
     if (rating.member.memberId !== memberId) {
       throw new ApiException(
         HttpStatus.FORBIDDEN,
@@ -124,5 +159,18 @@ export class RatingService {
     }
 
     return rating;
+  }
+
+  // ========================================
+  // 6. 평점 응답 변환
+  // ========================================
+
+  private toRatingResponse(rating: Rating) {
+    return {
+      ratingId: rating.ratingId,
+      movieId: rating.movieId,
+      score: rating.score,
+      comment: rating.comment,
+    };
   }
 }
