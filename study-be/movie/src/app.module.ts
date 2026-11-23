@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './controller/auth.controller';
+import { HealthController } from './controller/health.controller';
 import { FavoriteController } from './controller/favorite.controller';
 import { MemberController } from './controller/member.controller';
 import { MovieRecordController } from './controller/movie-record.controller';
@@ -43,6 +44,7 @@ import { RatingService } from './service/rating.service';
     }),
   ],
   controllers: [
+    HealthController,
     AuthController,
     MemberController,
     RatingController,
