@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.umc.movie.service.RatingServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-23T17:24:24.831Z" hostname="WIN-V3PBI71QIA6" time="0.224">
+  <properties/>
+  <testcase name="다른 회원의 평점을 수정하면 403과 RATING403_1 예외가 발생한다" classname="com.umc.movie.service.RatingServiceTest" time="0.21"/>
+  <testcase name="같은 영화에 평점을 중복 등록하면 409와 RATING409_1 예외가 발생한다" classname="com.umc.movie.service.RatingServiceTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

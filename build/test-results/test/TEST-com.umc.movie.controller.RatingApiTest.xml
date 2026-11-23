@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.umc.movie.controller.RatingApiTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-23T17:24:24.078Z" hostname="WIN-V3PBI71QIA6" time="0.066">
+  <properties/>
+  <testcase name="토큰 없이 평점을 등록하면 401과 AUTH401_2를 반환한다" classname="com.umc.movie.controller.RatingApiTest" time="0.015"/>
+  <testcase name="유효한 토큰으로 평점을 등록하면 201과 COMMON201을 반환한다" classname="com.umc.movie.controller.RatingApiTest" time="0.036"/>
+  <system-out><![CDATA[2026-11-24T02:24:24.082+09:00  INFO 35740 --- [movie] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.umc.movie.controller.RatingApiTest]: RatingApiTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T02:24:24.087+09:00  INFO 35740 --- [movie] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.umc.movie.MovieApplication for test class com.umc.movie.controller.RatingApiTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
