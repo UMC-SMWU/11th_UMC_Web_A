@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public record CreateMovieRecordRequest(
         @NotNull(message = "영화 ID는 필수입니다.")
@@ -16,6 +17,7 @@ public record CreateMovieRecordRequest(
         @Max(value = 5, message = "별점은 5점 이하여야 합니다.")
         Integer score,
 
+        @Size(max = 500, message = "감상평은 500자 이하여야 합니다.")
         String comment,
 
         @NotNull(message = "즐겨찾기 추가 여부는 필수입니다.")
