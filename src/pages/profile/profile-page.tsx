@@ -1,23 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { getFavorites } from "../../api/favorites/get-favorites";
-import { getMe } from "../../api/members/me";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
 import { useAuthStore } from "../../stores/auth-store";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import { favoriteKeys } from "../../api/favorites/favorite-keys";
+import { useMeQuery } from "../../hooks/use-me-query";
 
 export function ProfilePage() {
   const accessToken = useAuthStore((state) => state.accessToken);
 
-  const meQuery = useQuery({
-    queryKey: ["members", "me"],
-    queryFn: getMe,
-    enabled: Boolean(accessToken),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
+  const meQuery = useMeQuery();
 
   const favoritesQuery = useQuery({
     queryKey: favoriteKeys.list,

@@ -1,25 +1,16 @@
 import { useState } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getMe } from "../../api/members/me";
 import type { MemberInfo } from "../../api/members/me";
 import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate";
 import { ProfileAvatar } from "../../components/profile/profile-avatar";
 import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
-import { useAuthStore } from "../../stores/auth-store";
 import { cn } from "../../utils/cn";
+import { useMeQuery } from "../../hooks/use-me-query";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function ProfileEditPage() {
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const meQuery = useQuery({
-    queryKey: ["members", "me"],
-    queryFn: getMe,
-    enabled: Boolean(accessToken),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
+  const meQuery = useMeQuery();
 
   if (meQuery.isPending) {
     return (
