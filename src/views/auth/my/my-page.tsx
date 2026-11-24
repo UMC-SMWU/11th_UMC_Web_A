@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { getMovieDetail } from "@/api/movies/get-movie-detail";
 import Pagination from "@/components/movies/pagination";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -11,11 +13,12 @@ const PAGE_SIZE = 5;
 
 export function MyPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["members", "me"],
     queryFn: getMe,
-    enabled: Boolean(accessToken),
+    enabled: Boolean(accessToken) && hasHydrated,
     staleTime: 30_000,
   });
 
@@ -38,7 +41,11 @@ export function MyPage() {
     queries: visibleIds.map((id) => ({
       queryKey: ["movies", "detail", id],
       queryFn: () => getMovieDetail(id),
-      enabled: Boolean(accessToken) && !isFavoritesPending && !isFavoritesError,
+      enabled:
+        hasHydrated &&
+        Boolean(accessToken) &&
+        !isFavoritesPending &&
+        !isFavoritesError,
       staleTime: 30_000,
     })),
   });
@@ -49,7 +56,7 @@ export function MyPage() {
         <div className="flex items-center justify-between pb-6">
           <h1 className="text-2xl font-bold tracking-tight">내 정보</h1>
           <Link
-            to="/my-edit"
+            href="/my-edit"
             className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
           >
             정보 수정
@@ -58,9 +65,9 @@ export function MyPage() {
 
         <section className="border-y border-[#E3E6EB] py-4">
           <h2 className="mb-3 text-sm font-bold">기본 정보</h2>
-          {!accessToken && <p>로그인이 필요해요.</p>}
-          {accessToken && isLoading && <p>내 정보를 불러오는 중이에요.</p>}
-          {accessToken && isError && <p>내 정보를 불러오지 못했어요.</p>}
+
+          {isLoading && <p>내 정보를 불러오는 중이에요.</p>}
+          {isError && <p>내 정보를 불러오지 못했어요.</p>}
           <div className="flex items-center gap-5">
             <div className="grid size-16 shrink-0 place-items-center rounded-full bg-[#E3E6EB]">
               <img src="/icons/person.svg" alt="" className="size-8" />
@@ -106,11 +113,7 @@ export function MyPage() {
                 return (
                   <li key={visibleIds[index]}>
                     {movie ? (
-                      <Link
-                        to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
-                        className="block"
-                      >
+                      <Link href={`/movies/${movie.id}`} className="block">
                         <div className="aspect-[7/8] overflow-hidden rounded-lg bg-gray-200">
                           {movie.poster_path ? (
                             <img
