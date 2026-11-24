@@ -1,4 +1,7 @@
-import { Link, useParams } from "@tanstack/react-router";
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuthStore } from "../../stores/auth-store";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
@@ -15,7 +18,7 @@ function DetailMessage({ children }: { children: ReactNode }) {
   return (
     <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col items-start gap-4 px-5 py-10 md:px-20">
       {children}
-      <Link to="/" className="text-sm font-bold text-brand hover:text-brand-hover">
+      <Link href="/" className="text-sm font-bold text-brand hover:text-brand-hover">
         영화 목록
       </Link>
     </main>
@@ -86,11 +89,13 @@ function MovieDetailContent({ movieId }: MovieDetailContentProps) {
   return (
     <main className="relative isolate flex-1 overflow-hidden bg-ink text-white">
       {backdropUrl ? (
-        <img
-          className="absolute inset-0 -z-20 size-full object-cover"
+        <Image
+          className="-z-20 object-cover"
           src={backdropUrl}
           alt=""
           aria-hidden="true"
+          fill
+          sizes="100vw"
         />
       ) : null}
       <div className="absolute inset-0 -z-10 bg-linear-to-r from-ink via-ink/75 to-ink/30" />
@@ -98,7 +103,7 @@ function MovieDetailContent({ movieId }: MovieDetailContentProps) {
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-5 py-8 md:flex-row md:gap-12 md:px-20 md:py-14">
         <div className="flex shrink-0 flex-col items-start gap-6">
           <Link
-            to="/"
+            href="/"
             className="inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white"
           >
             <img className="size-5 invert" src="/icons/chevron-left.svg" alt="" />
@@ -135,9 +140,9 @@ function MovieDetailContent({ movieId }: MovieDetailContentProps) {
   );
 }
 
-export function MovieDetailPage() {
-  const { movieId } = useParams({ from: "/movies/$movieId" });
-  // URL의 movieId는 문자열이라 숫자로 바꾸고, 양의 정수일 때만 요청해요.
+// 주소의 movieId는 서버 컴포넌트(app/movies/[movieId]/page.tsx)가 읽어서 props로 넘겨줘요.
+export function MovieDetailPage({ movieId }: { movieId: string }) {
+  // movieId는 문자열이라 숫자로 바꾸고, 양의 정수일 때만 요청해요.
   const parsedMovieId = Number(movieId);
 
   if (!Number.isInteger(parsedMovieId) || parsedMovieId <= 0) {

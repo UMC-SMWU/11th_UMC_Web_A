@@ -1,4 +1,7 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
 import type { TmdbMovieListItem } from "../../api/movies/models";
@@ -91,8 +94,7 @@ function SearchResults({ query }: SearchResultsProps) {
                 </p>
                 <div className="mt-auto flex items-center gap-4 pt-3">
                   <Link
-                    to="/movies/$movieId"
-                    params={{ movieId: String(movie.id) }}
+                    href={`/movies/${movie.id}`}
                     className="text-sm font-bold text-brand hover:text-brand-hover"
                   >
                     상세 보기
@@ -109,8 +111,8 @@ function SearchResults({ query }: SearchResultsProps) {
 }
 
 export function SearchPage() {
-  const { query } = useSearch({ from: "/search" });
-  const navigate = useNavigate({ from: "/search" });
+  const router = useRouter();
+  const query = useSearchParams().get("query") ?? undefined;
   const [searchText, setSearchText] = useState(query ?? "");
 
   // 뒤로 가기·앞으로 가기로 URL의 query가 바뀌면 입력창도 함께 맞춰요.
@@ -126,9 +128,7 @@ export function SearchPage() {
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextQuery = searchText.trim();
-    navigate({
-      search: nextQuery ? { query: nextQuery } : {},
-    });
+    router.push(nextQuery ? `/search?query=${encodeURIComponent(nextQuery)}` : "/search");
   }
 
   return (

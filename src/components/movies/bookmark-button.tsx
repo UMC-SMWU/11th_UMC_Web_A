@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { useFavoriteQuery, useFavoritesQuery, useToggleFavoriteMutation } from "../../hooks/use-favorites";
 import { useAuthStore } from "../../stores/auth-store";
 import { cn } from "../../utils/cn";
@@ -11,7 +11,7 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ movieId, variant = "icon", className }: BookmarkButtonProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
   // 상세(text)는 영화 한 개를 조회하고, 목록(icon)은 즐겨찾기 목록 하나를 같이 써서 요청을 줄여요.
   const detailQuery = useFavoriteQuery(movieId, variant === "text");
@@ -25,7 +25,7 @@ export function BookmarkButton({ movieId, variant = "icon", className }: Bookmar
   const toggleBookmark = () => {
     if (!accessToken) {
       alert("로그인 후 이용할 수 있어요.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
     if (toggleMutation.isPending) return;

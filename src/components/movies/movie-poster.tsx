@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "../../utils/cn";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
@@ -25,12 +26,18 @@ export function MoviePoster({ posterPath, title, className, loading }: MoviePost
     );
   }
 
+  // next/image의 fill은 부모 크기에 맞춰 채워서, className은 크기를 정하는 바깥 div에 적용해요.
+  // sizes는 화면에서 차지하는 너비를 알려 줘서 필요한 크기의 이미지만 받게 해요.
   return (
-    <img
-      className={cn("block object-cover", className)}
-      src={posterUrl}
-      alt={`${title} 포스터`}
-      loading={loading}
-    />
+    <div className={cn("relative block overflow-hidden", className)}>
+      <Image
+        className="object-cover"
+        src={posterUrl}
+        alt={`${title} 포스터`}
+        fill
+        sizes="(min-width: 768px) 300px, 220px"
+        loading={loading}
+      />
+    </div>
   );
 }

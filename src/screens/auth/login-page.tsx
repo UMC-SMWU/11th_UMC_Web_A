@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { useState, type SubmitEvent } from "react";
 import {
   AuthCard,
@@ -69,7 +71,7 @@ export function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-subtle">
         아직 계정이 없나요?{" "}
-        <Link to="/signup" className="font-bold text-brand">
+        <Link href="/signup" className="font-bold text-brand">
           회원가입
         </Link>
       </p>

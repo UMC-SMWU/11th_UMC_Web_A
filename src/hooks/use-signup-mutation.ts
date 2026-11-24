@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { signup, type SignupRequest } from "../api/members/signup";
 import { getApiErrorMessage } from "../utils/get-api-error-message";
 
 export function useSignupMutation() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return useMutation({
     // 실패하면 서버가 보낸 message(예: 이미 가입된 이메일)를 error.message로 넘겨요.
@@ -17,7 +17,7 @@ export function useSignupMutation() {
     },
     onSuccess: (response) => {
       alert(response.message);
-      navigate({ to: "/login" });
+      router.push("/login");
     },
   });
 }

@@ -29,8 +29,14 @@ export function useToggleFavoriteMutation(movieId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (isFavorite: boolean) =>
-      isFavorite ? removeFavorite(movieId) : addFavorite(movieId),
+    // 추가와 해제의 응답 형태가 달라서, 결과를 쓰지 않고 요청이 끝나기만 기다려요.
+    mutationFn: async (isFavorite: boolean) => {
+      if (isFavorite) {
+        await removeFavorite(movieId);
+      } else {
+        await addFavorite(movieId);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },

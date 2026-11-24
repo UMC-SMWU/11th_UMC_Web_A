@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { formatReleaseDate } from "../../utils/movies/format-movie";
 import { BookmarkButton } from "./bookmark-button";
@@ -9,12 +9,12 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ movie }: MovieCardProps) {
-  const detailParams = { movieId: String(movie.id) };
+  const detailHref = `/movies/${movie.id}`;
 
   return (
     <article className="flex w-full flex-col gap-1">
       <div className="relative h-[274px] w-full overflow-hidden rounded-[10px] bg-surface">
-        <Link to="/movies/$movieId" params={detailParams} className="block size-full">
+        <Link href={detailHref} className="block size-full">
           <MoviePoster
             posterPath={movie.poster_path}
             title={movie.title}
@@ -26,8 +26,7 @@ export function MovieCard({ movie }: MovieCardProps) {
       </div>
 
       <Link
-        to="/movies/$movieId"
-        params={detailParams}
+        href={detailHref}
         className="truncate pt-[5px] text-sm leading-none font-extrabold text-ink"
       >
         {movie.title}

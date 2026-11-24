@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { getMovies } from "../../api/movies/get-movies";
 import type { TmdbMovieListItem } from "../../api/movies/models";
