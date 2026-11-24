@@ -1,12 +1,13 @@
+"use client";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getMovieDetailErrorMessage } from "../../api/movies/get-movie-detail-error-message";
 import { cn } from "../../utils/cn";
 import { useCreateFavoriteMutation } from "@/hooks/use-create-favorite-mutation";
 import { useAuthStore } from "@/stores/auth-store";
-import { useNavigate } from "@tanstack/react-router";
 import { useFavoriteQuery } from "@/hooks/use-favorite-query";
 import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation";
 import { getMemberIdFromToken } from "@/utils/get-member-id-from-token";
@@ -20,7 +21,8 @@ export function MovieDetailPage() {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState<string | null>(null);
 
-  const { movieId } = useParams({ from: "/movies/$movieId" });
+  const params = useParams<{ movieId: string }>();
+  const movieId = params?.movieId;
 
   const parsedMovieId = Number(movieId);
 
@@ -33,7 +35,7 @@ export function MovieDetailPage() {
     staleTime: 30 * 1000,
   });
 
-  const navigate = useNavigate();
+  const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const memberId = getMemberIdFromToken(accessToken);
@@ -69,7 +71,7 @@ export function MovieDetailPage() {
   const handleBookmarkClick = () => {
     if (!accessToken) {
       alert("로그인이 필요합니다.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
 
@@ -109,7 +111,7 @@ export function MovieDetailPage() {
   const handleRatingSubmit = () => {
     if (!accessToken) {
       alert("로그인이 필요합니다.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
 
@@ -268,7 +270,7 @@ export function MovieDetailPage() {
 
         <div className="relative mx-auto flex h-full max-w-8xl flex-col justify-between px-25 py-6">
           <Link
-            to="/"
+            href="/"
             className="inline-flex items-center text-sm text-gray-300 hover:text-white transition-colors"
           >
             <img src="/icons/chevron-left.svg" alt="" className="h-6 w-6" />
