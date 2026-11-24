@@ -1,4 +1,7 @@
+"use client";
+
 import { useState } from "react";
+import Link from "next/link";
 import { checkEmailDuplicate } from "@/api/members/check-email-duplicate";
 import { checkNicknameDuplicate } from "@/api/members/check-nickname-duplicate";
 import { useSignupMutation } from "@/hooks/use-signup-mutation";
@@ -261,12 +264,12 @@ export function SignupPage() {
 
         <p className="mt-4 text-center text-xs text-[#606774]">
           이미 계정이 있나요?{" "}
-          <a
+          <Link
             href="/login"
             className="font-semibold text-[#2563EB] hover:underline"
           >
             로그인
-          </a>
+          </Link>
         </p>
       </section>
     </main>
