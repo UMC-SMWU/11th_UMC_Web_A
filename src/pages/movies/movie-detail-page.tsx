@@ -4,11 +4,21 @@ import { Link, useParams } from "@tanstack/react-router";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { getMovieDetailErrorMessage } from "../../api/movies/get-movie-detail-error-message";
 import { cn } from "../../utils/cn";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useCreateFavoriteMutation } from "@/hooks/use-create-favorite-mutation";
+import { useAuthStore } from "@/stores/auth-store";
+import { useNavigate } from "@tanstack/react-router";
+import { useFavoriteQuery } from "@/hooks/use-favorite-query";
+import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation";
+import { getMemberIdFromToken } from "@/utils/get-member-id-from-token";
+import { useMemberRatingsQuery } from "@/hooks/use-member-ratings-query";
+import { useCreateRatingMutation } from "@/hooks/use-create-rating-mutation";
+import { useUpdateRatingMutation } from "@/hooks/use-update-rating-mutation";
+import { useDeleteRatingMutation } from "@/hooks/use-delete-rating-mutation";
 
 export function MovieDetailPage() {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState<string | null>(null);
 
   const { movieId } = useParams({ from: "/movies/$movieId" });
 
@@ -23,11 +33,175 @@ export function MovieDetailPage() {
     staleTime: 30 * 1000,
   });
 
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(parsedMovieId),
+  const navigate = useNavigate();
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  const memberId = getMemberIdFromToken(accessToken);
+  const {
+    data: memberRatings,
+    isPending: isRatingsPending,
+    isError: isRatingsError,
+  } = useMemberRatingsQuery(memberId);
+  const myRating = memberRatings?.find(
+    (item) => item.movieId === parsedMovieId,
   );
 
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const displayedRating = rating ?? myRating?.score ?? 0;
+  const displayedComment = comment ?? myRating?.comment ?? "";
+
+  const createRatingMutation = useCreateRatingMutation();
+  const updateRatingMutation = useUpdateRatingMutation();
+  const deleteRatingMutation = useDeleteRatingMutation();
+
+  const {
+    data: favoriteData,
+    isPending: isFavoritePending,
+    isError: isFavoriteError,
+  } = useFavoriteQuery(parsedMovieId);
+
+  const createFavoriteMutation = useCreateFavoriteMutation();
+  const deleteFavoriteMutation = useDeleteFavoriteMutation();
+
+  // 현재 영화의 즐겨찾기 여부
+  const isBookmarked = favoriteData?.result.isFavorite ?? false;
+
+  // 즐겨찾기 등록 버튼 클릭
+  const handleBookmarkClick = () => {
+    if (!accessToken) {
+      alert("로그인이 필요합니다.");
+      navigate({ to: "/login" });
+      return;
+    }
+
+    if (
+      createFavoriteMutation.isPending ||
+      deleteFavoriteMutation.isPending ||
+      isFavoritePending ||
+      isFavoriteError
+    ) {
+      return;
+    }
+
+    if (isBookmarked) {
+      deleteFavoriteMutation.mutate(parsedMovieId, {
+        onSuccess: () => {
+          alert("즐겨찾기를 해제했어요!");
+        },
+        onError: () => {
+          alert("즐겨찾기 해제에 실패했어요.");
+        },
+      });
+    } else {
+      createFavoriteMutation.mutate(
+        { movieId: parsedMovieId },
+        {
+          onSuccess: () => {
+            alert("즐겨찾기에 등록했어요!");
+          },
+          onError: () => {
+            alert("즐겨찾기 등록에 실패했어요.");
+          },
+        },
+      );
+    }
+  };
+
+  const handleRatingSubmit = () => {
+    if (!accessToken) {
+      alert("로그인이 필요합니다.");
+      navigate({ to: "/login" });
+      return;
+    }
+
+    if (!isValidMovieId) return;
+
+    if (isRatingsPending || isRatingsError || memberId === undefined) {
+      alert("평점 정보를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    if (displayedRating === 0) {
+      alert("별점을 선택해 주세요.");
+      return;
+    }
+
+    if (
+      createRatingMutation.isPending ||
+      updateRatingMutation.isPending ||
+      deleteRatingMutation.isPending
+    ) {
+      return;
+    }
+
+    // 기존 평점이 있으면 수정(PATCH)
+    if (myRating) {
+      updateRatingMutation.mutate(
+        {
+          ratingId: myRating.ratingId,
+          score: displayedRating,
+          comment: displayedComment,
+        },
+        {
+          onSuccess: () => {
+            alert("평점이 수정되었어요!");
+          },
+          onError: () => {
+            alert("평점 수정에 실패했어요.");
+          },
+        },
+      );
+
+      return;
+    }
+
+    // 기존 평점이 없으면 등록(POST)
+    createRatingMutation.mutate(
+      {
+        movieId: parsedMovieId,
+        score: displayedRating,
+        comment: displayedComment,
+      },
+      {
+        onSuccess: () => {
+          alert("평점이 등록되었어요!");
+        },
+        onError: () => {
+          alert("평점 등록에 실패했어요.");
+        },
+      },
+    );
+  };
+
+  const handleRatingDelete = () => {
+    if (!myRating) {
+      return;
+    }
+
+    if (
+      createRatingMutation.isPending ||
+      updateRatingMutation.isPending ||
+      deleteRatingMutation.isPending
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm("정말 평점을 삭제하시겠어요?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteRatingMutation.mutate(myRating.ratingId, {
+      onSuccess: () => {
+        setRating(null);
+        setComment(null);
+        alert("평점이 삭제되었어요!");
+      },
+      onError: () => {
+        alert("평점 삭제에 실패했어요.");
+      },
+    });
+  };
 
   if (!isValidMovieId) {
     return (
@@ -145,10 +319,26 @@ export function MovieDetailPage() {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => toggleBookmark(movie.id)}
-                className="rounded-md border border-gray-300 bg-[#2563EB] px-4 py-2 text-sm font-extrabold text-[#FFFFFF]"
+                onClick={handleBookmarkClick}
+                disabled={
+                  createFavoriteMutation.isPending ||
+                  deleteFavoriteMutation.isPending ||
+                  (Boolean(accessToken) &&
+                    (isFavoritePending || isFavoriteError))
+                }
+                className="rounded-md border border-gray-300 bg-[#2563EB] px-4 py-2 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기 등록"}
+                {createFavoriteMutation.isPending
+                  ? "등록 중..."
+                  : deleteFavoriteMutation.isPending
+                    ? "해제 중..."
+                    : accessToken && isFavoritePending
+                      ? "확인 중..."
+                      : accessToken && isFavoriteError
+                        ? "조회 실패"
+                        : isBookmarked
+                          ? "즐겨찾기 해제"
+                          : "즐겨찾기 등록"}
               </button>
             </div>
           </div>
@@ -173,8 +363,8 @@ export function MovieDetailPage() {
                 className={cn(
                   "rounded-lg border border-[#E3E6EB] bg-white px-1.5 py-1",
                   {
-                    "text-yellow-400": star <= (hoverRating || rating),
-                    "text-[#606774]": star > (hoverRating || rating),
+                    "text-yellow-400": star <= (hoverRating || displayedRating),
+                    "text-[#606774]": star > (hoverRating || displayedRating),
                   },
                 )}
               >
@@ -185,16 +375,44 @@ export function MovieDetailPage() {
 
           <textarea
             rows={3}
+            value={displayedComment}
+            onChange={(e) => setComment(e.target.value)}
             placeholder="영화를 보고 느낀 점을 남겨보세요."
             className="w-full resize-none rounded-md border border-[#E3E6EB] p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-[#FFFFFF]"
           />
 
           <button
             type="button"
-            className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+            onClick={handleRatingSubmit}
+            disabled={
+              createRatingMutation.isPending ||
+              updateRatingMutation.isPending ||
+              deleteRatingMutation.isPending ||
+              (Boolean(accessToken) && (isRatingsPending || isRatingsError))
+            }
+            className="mt-3 w-full rounded-md bg-[#17191E] py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            평점 저장
+            {createRatingMutation.isPending || updateRatingMutation.isPending
+              ? "저장 중..."
+              : myRating
+                ? "평점 수정하기"
+                : "평점 저장"}
           </button>
+
+          {myRating && (
+            <button
+              type="button"
+              onClick={handleRatingDelete}
+              disabled={
+                createRatingMutation.isPending ||
+                updateRatingMutation.isPending ||
+                deleteRatingMutation.isPending
+              }
+              className="mt-2 w-full rounded-md border border-red-300 bg-white py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {deleteRatingMutation.isPending ? "삭제 중..." : "평점 삭제"}
+            </button>
+          )}
         </div>
       </section>
     </main>

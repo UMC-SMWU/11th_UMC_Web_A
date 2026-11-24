@@ -1,6 +1,17 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "@/api/members/me";
+import { useAuthStore } from "@/stores/auth-store";
 
 function Header() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
   return (
     <header className="w-full border-b border-[#eeeeee] bg-white">
       <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between px-3 sm:gap-6 sm:px-4">
@@ -55,12 +66,23 @@ function Header() {
             <img src="/icons/search.svg" alt="검색" className="h-5 w-5" />
           </Link>
 
-          <Link
-            to="/login"
-            className="inline-flex h-10 shrink-0 items-center rounded-lg bg-[#2563EB] px-3 text-sm font-medium text-white sm:px-5"
-          >
-            로그인
-          </Link>
+          {!accessToken ? (
+            <Link
+              to="/login"
+              className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
+            >
+              로그인
+            </Link>
+          ) : meQuery.isLoading ? (
+            <span className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
+          ) : (
+            <Link
+              to="/my"
+              className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
+            >
+              마이페이지
+            </Link>
+          )}
         </div>
       </div>
     </header>
