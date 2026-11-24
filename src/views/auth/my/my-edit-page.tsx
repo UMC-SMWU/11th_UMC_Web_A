@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useUpdateMeMutation } from "@/hooks/use-update-me-mutation";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +11,8 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export function MyEditPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
   const [editedNickname, setEditedNickname] = useState<string | null>(null);
   const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
   const [nicknameMessage, setNicknameMessage] = useState("");
@@ -17,7 +21,7 @@ export function MyEditPage() {
   const { data: profile } = useQuery({
     queryKey: ["members", "me"],
     queryFn: getMe,
-    enabled: Boolean(accessToken),
+    enabled: hasHydrated && Boolean(accessToken),
     staleTime: 30_000,
   });
 
@@ -29,15 +33,15 @@ export function MyEditPage() {
 
   const nickname = editedNickname ?? profile?.nickname ?? "";
   const trimmedNickname = nickname.trim();
-  const isNicknameUnchanged = trimmedNickname !== profile?.nickname;
+  const isNicknameUnchanged = trimmedNickname === profile?.nickname;
 
   const canSubmit =
     Boolean(accessToken && profile) &&
     trimmedNickname.length >= 2 &&
     trimmedNickname.length <= 12 &&
-    (isNicknameUnchanged || checkedNickname === trimmedNickname) &&
+    !isNicknameUnchanged &&
+    checkedNickname === trimmedNickname &&
     !isCheckingNickname;
-
   const handleCheckNickname = async () => {
     const targetNickname = trimmedNickname;
 
@@ -98,7 +102,7 @@ export function MyEditPage() {
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white"
+            className="rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white transition-colors enabled:hover:bg-[#1D4ED8] disabled:bg-[#93B4F5] disabled:cursor-not-allowed"
             disabled={!canSubmit || updateMeMutation.isPending}
           >
             {updateMeMutation.isPending ? "저장 중" : "저장"}
