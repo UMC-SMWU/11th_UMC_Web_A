@@ -4,6 +4,9 @@ import { createJSONStorage, persist } from "zustand/middleware";
 interface AuthStore {
   accessToken: string | null;
   setAccessToken: (accessToken: string | null) => void;
+
+  hasHydrated: boolean;
+  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -11,11 +14,17 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       accessToken: null,
       setAccessToken: (accessToken) => set({ accessToken }),
+
+      hasHydrated: false,
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
       name: "umcine-auth-store",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ accessToken: state.accessToken }),
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+      }),
+      skipHydration: true,
     },
   ),
 );

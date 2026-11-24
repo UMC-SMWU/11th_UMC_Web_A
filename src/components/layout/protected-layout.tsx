@@ -1,12 +1,24 @@
-import { Navigate, Outlet } from "@tanstack/react-router";
+"use client";
+
+import { useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
-export function ProtectedLayout() {
-  const accessToken = useAuthStore((state) => state.accessToken);
+export function ProtectedLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
 
-  if (!accessToken) {
-    return <Navigate to="/login" replace />;
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
+  useEffect(() => {
+    if (hasHydrated && !accessToken) {
+      router.replace("/login");
+    }
+  }, [hasHydrated, accessToken, router]);
+
+  if (!hasHydrated || !accessToken) {
+    return null;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 }

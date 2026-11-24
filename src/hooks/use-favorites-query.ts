@@ -4,11 +4,12 @@ import { useAuthStore } from "@/stores/auth-store";
 
 export function useFavoritesQuery() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   return useQuery({
     queryKey: ["favorites"],
     queryFn: getFavorites,
-    enabled: Boolean(accessToken),
+    enabled: hasHydrated && Boolean(accessToken),
     staleTime: 30_000,
   });
 }

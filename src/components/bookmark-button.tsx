@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { useFavoriteQuery } from "@/hooks/use-favorite-query";
 import { useCreateFavoriteMutation } from "@/hooks/use-create-favorite-mutation";
 import { useDeleteFavoriteMutation } from "@/hooks/use-delete-favorite-mutation";
@@ -9,7 +9,7 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ movieId }: BookmarkButtonProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
 
   // GET: 즐겨찾기 상태 확인
@@ -33,7 +33,7 @@ export function BookmarkButton({ movieId }: BookmarkButtonProps) {
   const handleBookmarkClick = () => {
     if (!accessToken) {
       alert("로그인이 필요합니다.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
 
