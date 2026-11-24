@@ -1,6 +1,10 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLoginMutation } from "@/hooks/use-login-mutation";
+import { useAuthStore } from "@/stores/auth-store";
 
 const fieldClassName =
   "flex h-11 items-center gap-2 rounded-lg border border-[#E3E6EB] bg-white px-3 focus-within:border-[#485cde]";
@@ -10,8 +14,23 @@ const inputClassName =
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginPage() {
+  const router = useRouter();
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
   const loginMutation = useLoginMutation();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  useEffect(() => {
+    if (hasHydrated && accessToken) {
+      router.replace("/");
+    }
+  }, [hasHydrated, accessToken, router]);
+
   const canSubmit =
     EMAIL_REGEX.test(form.email.trim()) && form.password.length > 0;
 
@@ -24,6 +43,10 @@ export function LoginPage() {
       password: form.password,
     });
   };
+
+  if (!hasHydrated || accessToken) {
+    return null;
+  }
 
   return (
     <main className="grid min-h-[calc(100dvh-80px)] place-items-center bg-[#f5f6f8] px-5 py-10 text-[#19191f]">
@@ -95,7 +118,7 @@ export function LoginPage() {
         <p className="mt-5 text-center text-xs text-[#606774]">
           처음이신가요?{" "}
           <Link
-            to="/signup"
+            href="/signup"
             className="font-semibold text-[#485cde] hover:underline"
           >
             회원가입
