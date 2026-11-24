@@ -1,12 +1,15 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/search-movie";
 
 export function SearchPage() {
-  const { query = "" } = useSearch({ from: "/search" });
-  const navigate = useNavigate({ from: "/search" });
-
+  const searchParams = useSearchParams();
+  const query = searchParams?.get("query") ?? "";
+  const router = useRouter();
   const [searchText, setSearchText] = useState(query);
 
   const normalizedQuery = query.trim();
@@ -24,14 +27,14 @@ export function SearchPage() {
 
     const nextQuery = searchText.trim();
 
-    navigate({
-      search: nextQuery ? { query: nextQuery } : {},
-    });
+    router.push(
+      nextQuery ? `/search?query=${encodeURIComponent(nextQuery)}` : "/search",
+    );
   }
 
   function handleClear() {
     setSearchText("");
-    navigate({ search: {} });
+    router.push("/search");
   }
 
   return (
@@ -164,8 +167,7 @@ export function SearchPage() {
 
                       <div className="mt-2">
                         <Link
-                          to="/movies/$movieId"
-                          params={{ movieId: String(movie.id) }}
+                          href={`/movies/${movie.id}`}
                           className="mb-10 inline-flex items-center text-xs font-semibold text-[#2563EB] hover:underline"
                         >
                           상세 보기 &rarr;
