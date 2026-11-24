@@ -1,5 +1,5 @@
 import type { TmdbMovieListItem } from "../../api/movies/models";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { BookmarkButton } from "../bookmark-button";
 
 interface MovieCardProps {
@@ -10,7 +10,7 @@ function MovieCard({ movie }: MovieCardProps) {
   return (
     <article className="w-full">
       <div className="relative aspect-[11/16] w-full overflow-hidden rounded-lg">
-        <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
+        <Link href={`/movies/${movie.id}`}>
           <img
             className="block h-full w-full object-cover"
             src={
@@ -27,7 +27,7 @@ function MovieCard({ movie }: MovieCardProps) {
         </div>
       </div>
 
-      <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
+      <Link href={`/movies/${movie.id}`}>
         <h3 className="mt-3 mb-1 text-base font-semibold text-[#222222]">
           {movie.title}
         </h3>

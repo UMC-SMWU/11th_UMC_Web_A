@@ -1,3 +1,5 @@
+import { MovieListPage } from "@/views/movies/movie-list-page";
+
 export default function HomePage() {
-  return <div>UMCine Next.js Migration</div>;
+  return <MovieListPage />;
 }
