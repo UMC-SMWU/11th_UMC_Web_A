@@ -26,11 +26,19 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    @Operation(
+            summary = "닉네임 중복 확인",
+            description = "닉네임 중복을 검사합니다."
+    )
     @GetMapping("/nickname/{nickname}")
     public NicknameCheckResponse checkNickname(@PathVariable String nickname) {
         return memberService.checkNickname(nickname);
     }
 
+    @Operation(
+            summary = "이메일 중복 확인",
+            description = "이메일 중복을 검사합니다."
+    )
     @GetMapping("/email/{email}")
     public EmailCheckResponse checkEmail(@PathVariable String email) {
         return memberService.checkEmail(email);
@@ -49,6 +57,10 @@ public class MemberController {
                 .body(ApiResponse.created("회원가입에 성공했습니다.", response));
     }
 
+    @Operation(
+            summary = "회원 정보 조회",
+            description = "내 정보 탭에서 회원의 정보를 조회합니다."
+    )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
             // 인터셉터가 request.setAttribute("memberId", ...)로 담아둔 값을 꺼냅니다
@@ -58,6 +70,10 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.ok("회원 정보를 조회했습니다.", response));
     }
 
+    @Operation(
+            summary = "회원 정보 수정",
+            description = "회원 정보를 수정합니다."
+    )
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,

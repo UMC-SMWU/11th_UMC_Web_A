@@ -71,7 +71,6 @@ public class FavoriteController {
                             }
                             """)))
     })
-
     @PostMapping("/favorites")
     public ResponseEntity<ApiResponse<FavoriteResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -82,6 +81,10 @@ public class FavoriteController {
                 .body(ApiResponse.created("즐겨찾기를 등록했습니다.", response));
     }
 
+    @Operation(
+            summary = "즐겨찾기 목록 조회",
+            description = "즐겨찾기 목록을 조회합니다."
+    )
     @GetMapping("/favorites")
     public ResponseEntity<ApiResponse<List<FavoriteResponse>>> getMyFavorites(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -90,6 +93,10 @@ public class FavoriteController {
         return ResponseEntity.ok(ApiResponse.ok("내 즐겨찾기 목록을 조회했습니다.", response));
     }
 
+    @Operation(
+            summary = "즐겨찾기 여부 조회",
+            description = "즐겨찾기 여부를 조회합니다."
+    )
     @GetMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<FavoriteStatusResponse>> getStatus(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -99,6 +106,10 @@ public class FavoriteController {
         return ResponseEntity.ok(ApiResponse.ok("즐겨찾기 여부를 조회했습니다.", response));
     }
 
+    @Operation(
+            summary = "즐겨찾기 해제",
+            description = "즐겨찾기 목록에서 즐겨찾기를 해제합니다."
+    )
     @DeleteMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,

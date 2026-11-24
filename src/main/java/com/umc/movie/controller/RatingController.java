@@ -7,6 +7,8 @@ import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
 import com.umc.movie.interceptor.AuthInterceptor;
 import com.umc.movie.service.RatingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,19 +16,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "평점", description = "영화 평점 API")
 @RestController
 @RequiredArgsConstructor
 public class RatingController {
 
     private final RatingService ratingService;
 
-    // 5주차에 만든 유저별 평점 조회입니다. 공개 API라 토큰을 받지 않습니다.
+    @Operation(
+            summary = "영화 평점 조회",
+            description = "사용자가 만든 평점들을 조회합니다."
+    )
     @GetMapping("/members/{memberId}/ratings")
     public List<RatingResponse> getMemberRatings(@PathVariable Long memberId) {
         return ratingService.getRatingsByMember(memberId);
     }
 
-    // 경로에서 /members/{memberId}가 사라지고 memberId는 인터셉터가 담아둔 값을 씁니다
+    @Operation(
+            summary = "평점 생성",
+            description = "사용자가 평점을 생성합니다."
+    )
     @PostMapping("/ratings")
     public ResponseEntity<ApiResponse<RatingResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -37,7 +46,10 @@ public class RatingController {
                 .body(ApiResponse.created("평점을 등록했습니다.", response));
     }
 
-    // 경로에서도 /{memberId}가 사라지고 인터셉터가 담아둔 값을 씁니다
+    @Operation(
+            summary = "평점 수정",
+            description = "평점 내용을 수정합니다."
+    )
     @PatchMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<RatingResponse>> update(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -48,6 +60,10 @@ public class RatingController {
         return ResponseEntity.ok(ApiResponse.ok("평점을 수정했습니다.", response));
     }
 
+    @Operation(
+            summary = "평점 삭제",
+            description = "평점을 삭제합니다."
+    )
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
