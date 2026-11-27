@@ -29,7 +29,7 @@ public class AuthService {
             throw loginFailed();
         }
 
-        return new LoginResponse(member.getNickname(), jwtUtil.createToken(member.getMemberId()));
+        return new LoginResponse(member.getNickname(), jwtUtil.createToken(member.getMemberId(), member.getEmail()));
     }
 
     private ApiException loginFailed() {

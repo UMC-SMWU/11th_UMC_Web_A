@@ -24,10 +24,11 @@ public class JwtUtil {
         this.accessExpirationMs = accessExpirationSeconds * 1000;   // 초 → 밀리초
     }
 
-    public String createToken(Long memberId) {
+    public String createToken(Long memberId, String email) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(String.valueOf(memberId))
+                .claim("email", email)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessExpirationMs))
                 .signWith(key)

@@ -5,6 +5,8 @@ import com.umc.movie.dto.CreateMovieRecordRequest;
 import com.umc.movie.dto.MovieRecordResponse;
 import com.umc.movie.interceptor.AuthInterceptor;
 import com.umc.movie.service.MovieRecordService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +15,17 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "평점 기록", description = "영화 평점 기록 API")
 @RestController
 @RequiredArgsConstructor
 public class MovieRecordController {
 
     private final MovieRecordService movieRecordService;
 
+    @Operation(
+            summary = "영화 기록 저장",
+            description = "영화 기록을 저장합니다."
+    )
     @PostMapping("/movie-records")
     public ResponseEntity<ApiResponse<MovieRecordResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
